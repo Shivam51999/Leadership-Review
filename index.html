@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mangalam · Leadership Review 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --espresso:#3B2A26; --espresso-2:#4A342E; --red:#C0392B; --gold:#B08D57;
+  --cream:#F7F3EE; --card:#FFFFFF; --ink:#2B2320; --muted:#8A7B72; --line:#E8DFD6;
+  --green:#2E7D32; --amber:#B26A00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Mulish',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+h1,h2,h3,.serif{font-family:'Playfair Display',serif}
+.topbar{background:var(--espresso);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar .brand{display:flex;align-items:center;gap:12px}
+.topbar .mark{width:34px;height:34px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:800;font-size:18px}
+.topbar h1{font-size:18px;font-weight:700;letter-spacing:.3px}
+.topbar .sub{font-size:11px;color:#D9CCC3;letter-spacing:1.5px;text-transform:uppercase}
+.topbar .right{display:flex;gap:10px;align-items:center}
+.btn{border:none;border-radius:8px;padding:9px 16px;font-family:'Mulish',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
+.btn-ghost{background:transparent;color:#EADFD7;border:1px solid #6B554D}
+.btn-ghost:hover{background:#4A342E}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:#A93226}
+.btn-dark{background:var(--espresso);color:#fff}
+.btn-dark:hover{background:var(--espresso-2)}
+.btn-lite{background:#EFE7DD;color:var(--espresso)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 80px}
+.hidden{display:none!important}
+
+/* login */
+.login-card{max-width:520px;margin:60px auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:36px;box-shadow:0 10px 30px rgba(59,42,38,.08)}
+.login-card h2{font-size:26px;color:var(--espresso);margin-bottom:6px}
+.login-card p{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+.search-input{width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:10px;font-family:'Mulish';font-size:15px;outline:none}
+.search-input:focus{border-color:var(--gold)}
+.giver-list{margin-top:10px;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.giver-item{padding:11px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1EAE2;font-size:14px}
+.giver-item:last-child{border-bottom:none}
+.giver-item:hover{background:#FAF5EF}
+.giver-item .cnt{font-size:11.5px;color:var(--muted);font-weight:700}
+.giver-item .cnt.done{color:var(--green)}
+
+/* my reviews */
+.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 26px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.hero h2{font-size:24px;color:var(--espresso)}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.progress-wrap{min-width:220px}
+.progress-bar{height:10px;background:#EFE7DD;border-radius:6px;overflow:hidden;margin-top:6px}
+.progress-bar>div{height:100%;background:linear-gradient(90deg,var(--gold),var(--red));border-radius:6px;transition:.4s}
+.progress-label{font-size:12.5px;font-weight:800;color:var(--espresso)}
+.section-title{font-size:17px;color:var(--espresso);margin:26px 0 4px;display:flex;align-items:center;gap:10px}
+.section-note{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.badge{font-size:10.5px;font-weight:800;letter-spacing:1px;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+.b-vendor{background:#EFE1F7;color:#6A3F91}.b-peer{background:#E1EDF7;color:#1F5E8C}
+.b-team{background:#E4F3E5;color:#2E7D32}.b-manager{background:#F9E9DA;color:#B26A00}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rcard .nm{font-weight:800;font-size:15px;color:var(--ink)}
+.rcard .dp{font-size:12px;color:var(--muted);margin-top:2px}
+.chip-done{color:var(--green);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:5px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(43,35,32,.55);display:flex;align-items:flex-start;justify-content:center;padding:30px 14px;z-index:100;overflow:auto}
+.modal{background:#fff;border-radius:16px;max-width:720px;width:100%;padding:30px 32px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.modal h3{font-size:21px;color:var(--espresso);margin-bottom:4px}
+.modal .reviewing{font-size:13.5px;color:var(--muted);margin-bottom:22px}
+.modal .reviewing b{color:var(--ink)}
+.q{margin-bottom:24px}
+.q .qe{font-weight:800;font-size:14.5px;margin-bottom:2px}
+.q .qm{font-size:13px;color:#6B5D54;margin-bottom:10px}
+.scale{display:flex;gap:7px;flex-wrap:wrap}
+.scale button{width:44px;height:40px;border:1.5px solid var(--line);background:#fff;border-radius:9px;font-family:'Mulish';font-weight:700;font-size:14px;cursor:pointer;transition:.12s}
+.scale button:hover{border-color:var(--gold)}
+.scale button.sel{background:var(--espresso);color:#fff;border-color:var(--espresso)}
+.anchors{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:5px}
+.pills{display:flex;gap:9px;flex-wrap:wrap}
+.pills button{padding:9px 16px;border:1.5px solid var(--line);border-radius:22px;background:#fff;font-family:'Mulish';font-weight:700;font-size:13px;cursor:pointer}
+.pills button.sel{background:var(--espresso);color:#fff;border-color:var(--espresso)}
+textarea{width:100%;min-height:92px;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-family:'Mulish';font-size:14px;resize:vertical;outline:none}
+textarea:focus{border-color:var(--gold)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.err{color:var(--red);font-size:12.5px;font-weight:700;margin-right:auto;align-self:center}
+
+/* admin */
+.admin-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.admin-table th{background:var(--espresso);color:#fff;font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;padding:11px 12px;text-align:left}
+.admin-table td{padding:11px 12px;border-bottom:1px solid #F1EAE2;font-size:13.5px}
+.admin-table tr:hover td{background:#FAF6F0;cursor:pointer}
+.score-pill{display:inline-block;min-width:44px;text-align:center;padding:4px 8px;border-radius:8px;font-weight:800;font-size:13px}
+.s-hi{background:#E4F3E5;color:#2E7D32}.s-mid{background:#FBF0DC;color:#B26A00}.s-lo{background:#FCE4E1;color:#C0392B}.s-na{background:#F0EBE4;color:#9A8C82}
+.mini{font-size:11.5px;color:var(--muted)}
+.detail-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:16px}
+.qrow{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px dashed #EFE7DD}
+.comment{background:#FAF6F0;border-left:3px solid var(--gold);padding:10px 13px;border-radius:0 9px 9px 0;margin-top:9px;font-size:13.5px}
+.comment .who{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.loading{text-align:center;padding:70px 0;color:var(--muted);font-weight:700}
+@media(max-width:640px){.modal{padding:22px 18px}.scale button{width:38px;height:36px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">M</div>
+    <div>
+      <h1>Leadership Review 2026</h1>
+      <div class="sub">Mangalam Group · 360° Leadership Feedback</div>
+    </div>
+  </div>
+  <div class="right">
+    <button class="btn btn-ghost" id="btnAdmin">Admin</button>
+    <button class="btn btn-ghost hidden" id="btnLogout">Switch user</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- LOGIN -->
+  <div id="viewLogin">
+    <div class="login-card">
+      <h2>Sign in with your email</h2>
+      <p>तुमचा नोंदणीकृत ईमेल आयडी टाका — Enter your registered email ID to see the leaders assigned to you for review. Your responses are confidential and go directly to management.</p>
+      <input class="search-input" id="emailInput" type="email" placeholder="name@example.com" autocomplete="email">
+      <div class="err" id="loginErr" style="margin-top:8px;display:block"></div>
+      <button class="btn btn-red" id="btnLogin" style="width:100%;margin-top:14px;padding:13px">Continue →</button>
+    </div>
+  </div>
+
+  <!-- MY REVIEWS -->
+  <div id="viewMine" class="hidden">
+    <div class="hero">
+      <div>
+        <h2 id="mineName"></h2>
+        <div class="sub">Complete each review below. एकदा जतन केल्यावर पुनरावलोकन बदलता येणार नाही.</div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label" id="mineProgressLabel"></div>
+        <div class="progress-bar"><div id="mineProgressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div id="mineSections"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="viewAdmin" class="hidden">
+    <div class="hero">
+      <div><h2>Leadership Scorecard</h2><div class="sub">Weighted across all four feedback channels · click a leader for detail</div></div>
+      <button class="btn btn-lite" id="btnRefresh">Refresh</button>
+    </div>
+    <div id="adminBody"><div class="loading">Loading…</div></div>
+    <div id="adminDetail"></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'; // ends with /exec
+/* ========================================== */
+
+const FORMS = {
+  VENDOR: {
+    title: 'Vendor / Cross-Department Feedback',
+    badge: 'b-vendor', anchors: ['Not at all likely','Extremely likely'],
+    note: 'Cross-department colleagues you work with regularly.',
+    questions: [
+      ['Does he/she personally demonstrate / show by priority?','तो/ती वैयक्तिकरित्या प्रात्यक्षिक/प्राधान्याने दाखवतो का?'],
+      ['Is he/she a co-operative & supportive member at work?','तो/ती कामावर सहकारी आणि सहाय्यक सदस्य आहे का?'],
+      ['Do his/her habits & actions inspire you?','त्याच्या/तिच्या सवयी आणि कृती तुम्हाला प्रेरणा देतात का?']
+    ],
+    commentLabel: ['Overall, is he/she a valuable team member? If yes, please share your views.','एकूणच तो/ती एक महत्त्वपूर्ण मौल्यवान संघ सदस्य आहे का? होय असल्यास, कृपया आपले मत सामायिक करा.']
+  },
+  PEER: {
+    title: 'Peer Feedback',
+    badge: 'b-peer', anchors: ['Not at all likely','Extremely likely'],
+    note: 'Fellow leaders at your level.',
+    questions: [
+      ['How is the comfort level of communication in a crucial or critical situation?','निर्णायक किंवा गंभीर परिस्थितीत एकमेकांशी किती मोकळेपणाने संवाद साधू शकता?'],
+      ['Does he/she respect you, your work & department and behave accordingly?','तो/ती तुमचा, तुमच्या कामाचा आणि तुमच्या विभागाचा आदर करतात का आणि त्यानुसार वागतात का?'],
+      ['Does he/she give genuine feedback about your work?','तो/ती तुमच्या कामाबद्दल खरा फीडबॅक देतात का?'],
+      ['Do his/her actions and habits inspire you?','त्यांचं/तिचं वागणं आणि सवयी तुम्हाला प्रेरित करतात का?'],
+      ['Do you think his/her skills, ideas, and knowledge are useful for you and the organization?','त्याची/तिची कौशल्ये, कल्पना आणि ज्ञान तुमच्यासाठी आणि संस्थेसाठी उपयुक्त आहेत असे तुम्हाला वाटते का?']
+    ],
+    commentLabel: ['Overall, is he/she a valuable team member? If yes, please share your views.','एकूणच तो/ती एक उपयुक्त संघ सदस्य आहे का? होय असल्यास, कृपया आपले मत मांडा.']
+  },
+  TEAM: {
+    title: 'Team Feedback (for Reporting Manager)',
+    badge: 'b-team', anchors: ['Not at all likely','Extremely likely'],
+    note: 'You report to this leader — rate them as your manager.',
+    questions: [
+      ['Does he/she clearly communicate expectations about work?','तो/ती तुम्हाला तुमच्याकडून असलेल्या कामाबद्दलच्या अपेक्षा स्पष्टपणे समजावून सांगतात का?'],
+      ['Does he/she give you feedback regularly about your work?','तो/ती तुम्हाला तुमच्या कामाबद्दल नियमितपणे फीडबॅक देतात का?'],
+      ['Is he/she a good listener who encourages you to share your ideas and concerns?','ते तुमचं म्हणणं योग्यप्रकारे ऐकून घेतात का जेणेकरून तुम्ही तुमच्या नवनवीन कल्पना किंवा अडचणी त्यांच्यासमोर मांडू शकता?'],
+      ['Does he/she show appreciation toward your work whenever due?','तुम्ही केलेल्या चांगल्या कामाची वेळोवेळी दखल घेण्यात येते का?'],
+      ['Is he/she genuinely interested in your growth and invests time and effort in developing you personally and professionally?','त्यांना माझ्या प्रगतीमध्ये खरोखर रस आहे का, मला वैयक्तिक आणि व्यावसायिकरित्या विकसित करण्यासाठी वेळ देतात का आणि त्यासाठी प्रयत्न करतात का?']
+    ],
+    commentLabel: ['Please add if you have further comments.','तुमच्या आणखी टिप्पण्या असल्यास कृपया जोडा.']
+  },
+  MANAGER: {
+    title: 'Reporting Manager Feedback (for Team Member)',
+    badge: 'b-manager', anchors: ['Not at all likely','Extremely likely'],
+    note: 'This leader reports to you — assess them as their manager.',
+    questions: [
+      ['Is the team member ready for the next challenge?','टीम मेंबर पुढील आव्हानासाठी तयार आहेत का?', ['No','Yes']],
+      ['Rate the candidate on commitment level.','उमेदवाराला वचनबद्धतेच्या पातळीवर रेट करा.'],
+      ['Rate the candidate on the relationship level.','उमेदवाराला नातेसंबंधाच्या पातळीवर रेट करा.'],
+      ['Rate the candidate on discipline level.','उमेदवाराला शिस्तीच्या पातळीवर रेट करा.'],
+      ['Rate the candidate on ease of working.','कामाच्या सुलभतेवर उमेदवाराला रेट करा.'],
+      ['Rate the candidate on versatility level.','उमेदवाराला अष्टपैलुत्व स्तरावर रेट करा.'],
+      ['Rate the candidate on quality level of the work.','उमेदवाराला कामाच्या गुणवत्तेनुसार रेट करा.']
+    ],
+    tenure: {
+      label: ['How long do you see he/she will be associated with the organization?','तो/ती संस्थेशी किती काळ संबंधित असेल असे तुम्हाला वाटते?'],
+      options: ['0-6 months','1-2 years','3-5 years','More than 5 years']
+    },
+    commentLabel: ['Please add if you have further comments.','तुमच्या आणखी टिप्पण्या असल्यास कृपया जोडा.']
+  }
+};
+const FORM_ORDER = ['MANAGER','TEAM','PEER','VENDOR'];
+const FORM_SHORT = {VENDOR:'Vendor / Cross-Dept',PEER:'Peer',TEAM:'Your Manager',MANAGER:'Your Team Member'};
+
+let state = { me: null, email: null, assignments: [], adminData: null };
+
+/* ---------- JSONP ---------- */
+let jsonpN = 0;
+function api(params) {
+  return new Promise((resolve, reject) => {
+    const cb = '__cb' + (++jsonpN) + '_' + Date.now();
+    const s = document.createElement('script');
+    const q = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    window[cb] = (data) => { delete window[cb]; s.remove(); resolve(data); };
+    s.onerror = () => { delete window[cb]; s.remove(); reject(new Error('Network error')); };
+    s.src = API_URL + '?' + q + '&callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+/* ---------- login ---------- */
+async function doLogin() {
+  const email = document.getElementById('emailInput').value.trim().toLowerCase();
+  const err = document.getElementById('loginErr');
+  if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email ID.'; return; }
+  err.textContent = '';
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const r = await api({action:'login', email});
+    if (!r.ok) throw new Error(r.error);
+    state.me = r.giver.name;
+    state.email = email;
+    state.assignments = r.assignments;
+    try { localStorage.setItem('lr_email', email); } catch(e){}
+    show('viewMine');
+    document.getElementById('mineName').textContent = r.giver.name;
+    renderMine();
+  } catch(e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Continue →';
+  }
+}
+document.getElementById('btnLogin').onclick = doLogin;
+document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+// prefill remembered email
+try { const saved = localStorage.getItem('lr_email'); if (saved) document.getElementById('emailInput').value = saved; } catch(e){}
+
+function renderMine() {
+  const a = state.assignments;
+  const done = a.filter(x => x.status==='DONE').length;
+  document.getElementById('mineProgressLabel').textContent = done + ' of ' + a.length + ' completed';
+  document.getElementById('mineProgressFill').style.width = (a.length ? done/a.length*100 : 0) + '%';
+  let html = '';
+  FORM_ORDER.forEach(f => {
+    const items = a.filter(x => x.form===f);
+    if (!items.length) return;
+    const F = FORMS[f];
+    html += `<div class="section-title"><span class="serif">${F.title}</span><span class="badge ${F.badge}">${items.filter(i=>i.status==='DONE').length}/${items.length}</span></div>
+      <div class="section-note">${F.note}</div><div class="grid">`;
+    items.forEach(it => {
+      html += `<div class="rcard"><div><div class="nm">${it.leader}</div><div class="dp">${it.dept}</div></div>`;
+      html += it.status==='DONE'
+        ? `<span class="chip-done">✓ Submitted</span>`
+        : `<button class="btn btn-red" onclick="openForm('${it.leaderId}','${it.form}')">Review</button>`;
+      html += `</div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('mineSections').innerHTML = html || '<div class="loading">No reviews assigned.</div>';
+}
+
+/* ---------- form modal ---------- */
+let cur = null;
+function openForm(leaderId, form) {
+  const it = state.assignments.find(x => x.leaderId===leaderId && x.form===form);
+  if (!it) return;
+  cur = { it, ratings: {}, tenure: null };
+  const F = FORMS[form];
+  let html = `<div class="overlay" id="ov"><div class="modal">
+    <h3>${F.title}</h3>
+    <div class="reviewing">Reviewing: <b>${it.leader}</b> · ${it.dept}</div>`;
+  F.questions.forEach((q, i) => {
+    const anchors = q[2] || F.anchors;
+    html += `<div class="q"><div class="qe">${q[0]}</div><div class="qm">${q[1]}</div>
+      <div class="scale" id="sc${i}">`;
+    for (let v=1; v<=10; v++) html += `<button onclick="pick(${i},${v},this)">${v}</button>`;
+    html += `</div><div class="anchors"><span>${anchors[0]}</span><span>${anchors[1]}</span></div></div>`;
+  });
+  if (F.tenure) {
+    html += `<div class="q"><div class="qe">${F.tenure.label[0]}</div><div class="qm">${F.tenure.label[1]}</div><div class="pills" id="tenurePills">`;
+    F.tenure.options.forEach(o => html += `<button onclick="pickTenure('${o}',this)">${o}</button>`);
+    html += `</div></div>`;
+  }
+  html += `<div class="q"><div class="qe">${F.commentLabel[0]}</div><div class="qm">${F.commentLabel[1]}</div>
+    <textarea id="cmt" placeholder="Type your comments…"></textarea></div>
+    <div class="modal-actions"><span class="err" id="ferr"></span>
+    <button class="btn btn-lite" onclick="closeForm()">Cancel</button>
+    <button class="btn btn-dark" id="btnSave" onclick="saveForm()">Save review</button></div>
+  </div></div>`;
+  document.getElementById('modalRoot').innerHTML = html;
+}
+function pick(qi, v, btn) {
+  cur.ratings[qi] = v;
+  [...btn.parentElement.children].forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function pickTenure(o, btn) {
+  cur.tenure = o;
+  [...btn.parentElement.children].forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function closeForm(){ document.getElementById('modalRoot').innerHTML=''; cur=null; }
+
+async function saveForm() {
+  const F = FORMS[cur.it.form];
+  const err = document.getElementById('ferr');
+  const ratings = F.questions.map((_,i) => cur.ratings[i]);
+  if (ratings.some(v => !v)) { err.textContent = 'Please answer all rating questions.'; return; }
+  if (F.tenure && !cur.tenure) { err.textContent = 'Please select the tenure question.'; return; }
+  err.textContent = '';
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = JSON.stringify({
+    email: state.email, leaderId: cur.it.leaderId, form: cur.it.form,
+    ratings, tenure: cur.tenure || '', comments: document.getElementById('cmt').value.trim()
+  });
+  try {
+    const r = await api({action:'submit', payload});
+    if (!r.ok) throw new Error(r.error);
+    cur.it.status = 'DONE';
+    closeForm();
+    renderMine();
+  } catch(e) {
+    err.textContent = e.message; btn.disabled = false; btn.textContent = 'Save review';
+  }
+}
+
+/* ---------- admin ---------- */
+document.getElementById('btnAdmin').onclick = async () => {
+  const pin = prompt('Admin PIN:');
+  if (!pin) return;
+  show('viewAdmin');
+  document.getElementById('adminBody').innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('adminDetail').innerHTML = '';
+  const r = await api({action:'dashboard', pin});
+  if (!r.ok) { document.getElementById('adminBody').innerHTML = '<div class="loading">'+r.error+'</div>'; return; }
+  state.adminData = r.leaders; state.adminPin = pin;
+  renderAdmin();
+};
+document.getElementById('btnRefresh').onclick = async () => {
+  const r = await api({action:'dashboard', pin: state.adminPin});
+  if (r.ok) { state.adminData = r.leaders; renderAdmin(); }
+};
+function sp(v){ if(v==null) return '<span class="score-pill s-na">—</span>';
+  const c = v>=8?'s-hi':v>=6?'s-mid':'s-lo';
+  return `<span class="score-pill ${c}">${v.toFixed(1)}</span>`; }
+function compl(c){ const t=c.VENDOR.t+c.PEER.t+c.TEAM.t+c.MANAGER.t, d=c.VENDOR.d+c.PEER.d+c.TEAM.d+c.MANAGER.d;
+  return `<b>${t?Math.round(d/t*100):0}%</b> <span class="mini">${d}/${t}</span>`; }
+
+function renderAdmin() {
+  let html = `<table class="admin-table"><tr><th>#</th><th>Leader</th><th>Department</th>
+    <th>Overall</th><th>Vendor</th><th>Peer</th><th>Team</th><th>Manager</th><th>Completion</th></tr>`;
+  state.adminData.forEach((L,i) => {
+    const fa = L.formAvgs;
+    html += `<tr onclick="adminDetail('${L.id}')"><td>${i+1}</td><td><b>${L.name}</b></td><td class="mini">${L.dept}</td>
+      <td>${sp(L.overall)}</td>
+      <td>${sp(fa.VENDOR&&fa.VENDOR.avg)}</td><td>${sp(fa.PEER&&fa.PEER.avg)}</td>
+      <td>${sp(fa.TEAM&&fa.TEAM.avg)}</td><td>${sp(fa.MANAGER&&fa.MANAGER.avg)}</td>
+      <td>${compl(L.completion)}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('adminBody').innerHTML = html;
+}
+function adminDetail(id) {
+  const L = state.adminData.find(x => x.id===id);
+  let html = `<div class="detail-card"><h3 class="serif" style="color:var(--espresso)">${L.name} <span class="mini">· ${L.dept} · ${L.responses} responses</span></h3>`;
+  FORM_ORDER.forEach(f => {
+    const S = L.formAvgs[f]; if (!S) return;
+    const F = FORMS[f];
+    html += `<div style="margin-top:16px"><span class="badge ${F.badge}">${F.title}</span> <span class="mini">avg ${S.avg} · n=${S.n}</span>`;
+    F.questions.forEach((q,i) => { if (S.q[i]) html += `<div class="qrow"><span>${q[0]}</span><b>${S.q[i].toFixed(1)}</b></div>`; });
+    if (S.tenure && Object.keys(S.tenure).length)
+      html += `<div class="qrow"><span>Expected tenure</span><b>${Object.entries(S.tenure).map(([k,v])=>k+' ×'+v).join(', ')}</b></div>`;
+    html += '</div>';
+  });
+  if (L.comments.length) {
+    html += `<div style="margin-top:18px"><b class="serif" style="color:var(--espresso)">Comments</b>`;
+    L.comments.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}</div>${c.text}</div>`);
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('adminDetail').innerHTML = html;
+  document.getElementById('adminDetail').scrollIntoView({behavior:'smooth'});
+}
+
+/* ---------- nav ---------- */
+function show(id) {
+  ['viewLogin','viewMine','viewAdmin'].forEach(v => document.getElementById(v).classList.toggle('hidden', v!==id));
+  document.getElementById('btnLogout').classList.toggle('hidden', id==='viewLogin');
+}
+document.getElementById('btnLogout').onclick = () => {
+  state.me = null; state.email = null; state.assignments = [];
+  document.getElementById('loginErr').textContent = '';
+  show('viewLogin');
+};
+</script>
+</body>
+</html>
