@@ -108,7 +108,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="mark">M</div>
     <div>
       <h1>Leadership Review 2026</h1>
-      <div class="sub">Mangalam Group · 360° Leadership Feedback</div>
+      <div class="sub">Mangalam Group · Leadership Feedback — Upward · Peer · Cross-Dept</div>
     </div>
   </div>
   <div class="right">
@@ -134,7 +134,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="hero">
       <div>
         <h2 id="mineName"></h2>
-        <div class="sub">Complete each review below. एकदा जतन केल्यावर पुनरावलोकन बदलता येणार नाही.</div>
+        <div class="sub">Rate each person assigned to you. एकदा जतन केल्यावर पुनरावलोकन बदलता येणार नाही.</div>
       </div>
       <div class="progress-wrap">
         <div class="progress-label" id="mineProgressLabel"></div>
@@ -147,7 +147,7 @@ textarea:focus{border-color:var(--gold)}
   <!-- ADMIN -->
   <div id="viewAdmin" class="hidden">
     <div class="hero">
-      <div><h2>Leadership Scorecard</h2><div class="sub">Weighted across all four feedback channels · click a leader for detail</div></div>
+      <div><h2>Leadership Scorecard</h2><div class="sub">Weighted across all feedback channels · click a name for detail</div></div>
       <button class="btn btn-lite" id="btnRefresh">Refresh</button>
     </div>
     <div id="adminBody"><div class="loading">Loading…</div></div>
@@ -166,7 +166,7 @@ const FORMS = {
   VENDOR: {
     title: 'Vendor / Cross-Department Feedback',
     badge: 'b-vendor', anchors: ['Not at all likely','Extremely likely'],
-    note: 'Cross-department colleagues you work with regularly.',
+    note: 'Cross-department leaders you work with — rate them.',
     questions: [
       ['Does he/she personally demonstrate / show by priority?','तो/ती वैयक्तिकरित्या प्रात्यक्षिक/प्राधान्याने दाखवतो का?'],
       ['Is he/she a co-operative & supportive member at work?','तो/ती कामावर सहकारी आणि सहाय्यक सदस्य आहे का?'],
@@ -177,7 +177,7 @@ const FORMS = {
   PEER: {
     title: 'Peer Feedback',
     badge: 'b-peer', anchors: ['Not at all likely','Extremely likely'],
-    note: 'Fellow leaders at your level.',
+    note: 'Peer leaders — rate them.',
     questions: [
       ['How is the comfort level of communication in a crucial or critical situation?','निर्णायक किंवा गंभीर परिस्थितीत एकमेकांशी किती मोकळेपणाने संवाद साधू शकता?'],
       ['Does he/she respect you, your work & department and behave accordingly?','तो/ती तुमचा, तुमच्या कामाचा आणि तुमच्या विभागाचा आदर करतात का आणि त्यानुसार वागतात का?'],
@@ -190,7 +190,7 @@ const FORMS = {
   TEAM: {
     title: 'Team Feedback (for Reporting Manager)',
     badge: 'b-team', anchors: ['Not at all likely','Extremely likely'],
-    note: 'You report to this leader — rate them as your manager.',
+    note: 'Your reporting manager / leader — rate them as your manager.',
     questions: [
       ['Does he/she clearly communicate expectations about work?','तो/ती तुम्हाला तुमच्याकडून असलेल्या कामाबद्दलच्या अपेक्षा स्पष्टपणे समजावून सांगतात का?'],
       ['Does he/she give you feedback regularly about your work?','तो/ती तुम्हाला तुमच्या कामाबद्दल नियमितपणे फीडबॅक देतात का?'],
@@ -199,29 +199,10 @@ const FORMS = {
       ['Is he/she genuinely interested in your growth and invests time and effort in developing you personally and professionally?','त्यांना माझ्या प्रगतीमध्ये खरोखर रस आहे का, मला वैयक्तिक आणि व्यावसायिकरित्या विकसित करण्यासाठी वेळ देतात का आणि त्यासाठी प्रयत्न करतात का?']
     ],
     commentLabel: ['Please add if you have further comments.','तुमच्या आणखी टिप्पण्या असल्यास कृपया जोडा.']
-  },
-  MANAGER: {
-    title: 'Reporting Manager Feedback (for Team Member)',
-    badge: 'b-manager', anchors: ['Not at all likely','Extremely likely'],
-    note: 'This leader reports to you — assess them as their manager.',
-    questions: [
-      ['Is the team member ready for the next challenge?','टीम मेंबर पुढील आव्हानासाठी तयार आहेत का?', ['No','Yes']],
-      ['Rate the candidate on commitment level.','उमेदवाराला वचनबद्धतेच्या पातळीवर रेट करा.'],
-      ['Rate the candidate on the relationship level.','उमेदवाराला नातेसंबंधाच्या पातळीवर रेट करा.'],
-      ['Rate the candidate on discipline level.','उमेदवाराला शिस्तीच्या पातळीवर रेट करा.'],
-      ['Rate the candidate on ease of working.','कामाच्या सुलभतेवर उमेदवाराला रेट करा.'],
-      ['Rate the candidate on versatility level.','उमेदवाराला अष्टपैलुत्व स्तरावर रेट करा.'],
-      ['Rate the candidate on quality level of the work.','उमेदवाराला कामाच्या गुणवत्तेनुसार रेट करा.']
-    ],
-    tenure: {
-      label: ['How long do you see he/she will be associated with the organization?','तो/ती संस्थेशी किती काळ संबंधित असेल असे तुम्हाला वाटते?'],
-      options: ['0-6 months','1-2 years','3-5 years','More than 5 years']
-    },
-    commentLabel: ['Please add if you have further comments.','तुमच्या आणखी टिप्पण्या असल्यास कृपया जोडा.']
   }
 };
-const FORM_ORDER = ['MANAGER','TEAM','PEER','VENDOR'];
-const FORM_SHORT = {VENDOR:'Vendor / Cross-Dept',PEER:'Peer',TEAM:'Your Manager',MANAGER:'Your Team Member'};
+const FORM_ORDER = ['TEAM','PEER','VENDOR'];
+const FORM_SHORT = {VENDOR:'Cross-Dept',PEER:'Peer',TEAM:'Team ↑ (upward)'};
 
 let state = { me: null, email: null, assignments: [], adminData: null };
 
@@ -281,10 +262,10 @@ function renderMine() {
     html += `<div class="section-title"><span class="serif">${F.title}</span><span class="badge ${F.badge}">${items.filter(i=>i.status==='DONE').length}/${items.length}</span></div>
       <div class="section-note">${F.note}</div><div class="grid">`;
     items.forEach(it => {
-      html += `<div class="rcard"><div><div class="nm">${it.leader}</div><div class="dp">${it.dept}</div></div>`;
+      html += `<div class="rcard"><div><div class="nm">${it.receiver}</div><div class="dp">${it.dept}</div></div>`;
       html += it.status==='DONE'
         ? `<span class="chip-done">✓ Submitted</span>`
-        : `<button class="btn btn-red" onclick="openForm('${it.leaderId}','${it.form}')">Review</button>`;
+        : `<button class="btn btn-red" onclick="openForm('${it.rkey}','${it.form}')">Review</button>`;
       html += `</div>`;
     });
     html += '</div>';
@@ -294,14 +275,14 @@ function renderMine() {
 
 /* ---------- form modal ---------- */
 let cur = null;
-function openForm(leaderId, form) {
-  const it = state.assignments.find(x => x.leaderId===leaderId && x.form===form);
+function openForm(rkey, form) {
+  const it = state.assignments.find(x => x.rkey===rkey && x.form===form);
   if (!it) return;
-  cur = { it, ratings: {}, tenure: null };
+  cur = { it, ratings: {} };
   const F = FORMS[form];
   let html = `<div class="overlay" id="ov"><div class="modal">
     <h3>${F.title}</h3>
-    <div class="reviewing">Reviewing: <b>${it.leader}</b> · ${it.dept}</div>`;
+    <div class="reviewing">Reviewing: <b>${it.receiver}</b> · ${it.dept}</div>`;
   F.questions.forEach((q, i) => {
     const anchors = q[2] || F.anchors;
     html += `<div class="q"><div class="qe">${q[0]}</div><div class="qm">${q[1]}</div>
@@ -309,11 +290,6 @@ function openForm(leaderId, form) {
     for (let v=1; v<=10; v++) html += `<button onclick="pick(${i},${v},this)">${v}</button>`;
     html += `</div><div class="anchors"><span>${anchors[0]}</span><span>${anchors[1]}</span></div></div>`;
   });
-  if (F.tenure) {
-    html += `<div class="q"><div class="qe">${F.tenure.label[0]}</div><div class="qm">${F.tenure.label[1]}</div><div class="pills" id="tenurePills">`;
-    F.tenure.options.forEach(o => html += `<button onclick="pickTenure('${o}',this)">${o}</button>`);
-    html += `</div></div>`;
-  }
   html += `<div class="q"><div class="qe">${F.commentLabel[0]}</div><div class="qm">${F.commentLabel[1]}</div>
     <textarea id="cmt" placeholder="Type your comments…"></textarea></div>
     <div class="modal-actions"><span class="err" id="ferr"></span>
@@ -327,11 +303,6 @@ function pick(qi, v, btn) {
   [...btn.parentElement.children].forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
 }
-function pickTenure(o, btn) {
-  cur.tenure = o;
-  [...btn.parentElement.children].forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
-}
 function closeForm(){ document.getElementById('modalRoot').innerHTML=''; cur=null; }
 
 async function saveForm() {
@@ -339,13 +310,12 @@ async function saveForm() {
   const err = document.getElementById('ferr');
   const ratings = F.questions.map((_,i) => cur.ratings[i]);
   if (ratings.some(v => !v)) { err.textContent = 'Please answer all rating questions.'; return; }
-  if (F.tenure && !cur.tenure) { err.textContent = 'Please select the tenure question.'; return; }
   err.textContent = '';
   const btn = document.getElementById('btnSave');
   btn.disabled = true; btn.textContent = 'Saving…';
   const payload = JSON.stringify({
-    email: state.email, leaderId: cur.it.leaderId, form: cur.it.form,
-    ratings, tenure: cur.tenure || '', comments: document.getElementById('cmt').value.trim()
+    email: state.email, rkey: cur.it.rkey, form: cur.it.form,
+    ratings, tenure: '', comments: document.getElementById('cmt').value.trim()
   });
   try {
     const r = await api({action:'submit', payload});
@@ -367,43 +337,41 @@ document.getElementById('btnAdmin').onclick = async () => {
   document.getElementById('adminDetail').innerHTML = '';
   const r = await api({action:'dashboard', pin});
   if (!r.ok) { document.getElementById('adminBody').innerHTML = '<div class="loading">'+r.error+'</div>'; return; }
-  state.adminData = r.leaders; state.adminPin = pin;
+  state.adminData = r.receivers; state.adminPin = pin;
   renderAdmin();
 };
 document.getElementById('btnRefresh').onclick = async () => {
   const r = await api({action:'dashboard', pin: state.adminPin});
-  if (r.ok) { state.adminData = r.leaders; renderAdmin(); }
+  if (r.ok) { state.adminData = r.receivers; renderAdmin(); }
 };
 function sp(v){ if(v==null) return '<span class="score-pill s-na">—</span>';
   const c = v>=8?'s-hi':v>=6?'s-mid':'s-lo';
   return `<span class="score-pill ${c}">${v.toFixed(1)}</span>`; }
-function compl(c){ const t=c.VENDOR.t+c.PEER.t+c.TEAM.t+c.MANAGER.t, d=c.VENDOR.d+c.PEER.d+c.TEAM.d+c.MANAGER.d;
+function compl(c){ const t=c.VENDOR.t+c.PEER.t+c.TEAM.t, d=c.VENDOR.d+c.PEER.d+c.TEAM.d;
   return `<b>${t?Math.round(d/t*100):0}%</b> <span class="mini">${d}/${t}</span>`; }
 
 function renderAdmin() {
-  let html = `<table class="admin-table"><tr><th>#</th><th>Leader</th><th>Department</th>
-    <th>Overall</th><th>Vendor</th><th>Peer</th><th>Team</th><th>Manager</th><th>Completion</th></tr>`;
+  let html = `<table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
+    <th>Overall</th><th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Completion</th></tr>`;
   state.adminData.forEach((L,i) => {
     const fa = L.formAvgs;
-    html += `<tr onclick="adminDetail('${L.id}')"><td>${i+1}</td><td><b>${L.name}</b></td><td class="mini">${L.dept}</td>
+    html += `<tr onclick="adminDetail('${L.key}')"><td>${i+1}</td><td><b>${L.name}</b></td><td class="mini">${L.dept}</td>
       <td>${sp(L.overall)}</td>
       <td>${sp(fa.VENDOR&&fa.VENDOR.avg)}</td><td>${sp(fa.PEER&&fa.PEER.avg)}</td>
-      <td>${sp(fa.TEAM&&fa.TEAM.avg)}</td><td>${sp(fa.MANAGER&&fa.MANAGER.avg)}</td>
+      <td>${sp(fa.TEAM&&fa.TEAM.avg)}</td>
       <td>${compl(L.completion)}</td></tr>`;
   });
   html += '</table>';
   document.getElementById('adminBody').innerHTML = html;
 }
 function adminDetail(id) {
-  const L = state.adminData.find(x => x.id===id);
+  const L = state.adminData.find(x => x.key===id);
   let html = `<div class="detail-card"><h3 class="serif" style="color:var(--espresso)">${L.name} <span class="mini">· ${L.dept} · ${L.responses} responses</span></h3>`;
   FORM_ORDER.forEach(f => {
     const S = L.formAvgs[f]; if (!S) return;
     const F = FORMS[f];
     html += `<div style="margin-top:16px"><span class="badge ${F.badge}">${F.title}</span> <span class="mini">avg ${S.avg} · n=${S.n}</span>`;
     F.questions.forEach((q,i) => { if (S.q[i]) html += `<div class="qrow"><span>${q[0]}</span><b>${S.q[i].toFixed(1)}</b></div>`; });
-    if (S.tenure && Object.keys(S.tenure).length)
-      html += `<div class="qrow"><span>Expected tenure</span><b>${Object.entries(S.tenure).map(([k,v])=>k+' ×'+v).join(', ')}</b></div>`;
     html += '</div>';
   });
   if (L.comments.length) {
