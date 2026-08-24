@@ -86,6 +86,14 @@ textarea:focus{border-color:var(--gold)}
 .err{color:var(--red);font-size:12.5px;font-weight:700;margin-right:auto;align-self:center}
 
 /* admin */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.filter-bar input,.filter-bar select{padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-family:'Mulish';font-size:13.5px;font-weight:600;color:var(--ink);background:#fff;outline:none}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--gold)}
+.filter-bar input{min-width:210px}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:none;background:#fff;padding:10px 14px;font-family:'Mulish';font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--espresso);color:#fff}
+.result-count{font-size:12px;color:var(--muted);font-weight:700;margin-left:auto}
 .admin-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
 .admin-table th{background:var(--espresso);color:#fff;font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;padding:11px 12px;text-align:left}
 .admin-table td{padding:11px 12px;border-bottom:1px solid #F1EAE2;font-size:13.5px}
@@ -149,6 +157,21 @@ textarea:focus{border-color:var(--gold)}
     <div class="hero">
       <div><h2>Leadership Scorecard</h2><div class="sub">Weighted across all feedback channels · click a name for detail</div></div>
       <button class="btn btn-lite" id="btnRefresh">Refresh</button>
+    </div>
+    <div class="filter-bar" id="adminFilters" style="display:none">
+      <input id="fSearch" placeholder="Search name…">
+      <select id="fDept"><option value="">All departments</option></select>
+      <select id="fStatus">
+        <option value="">All statuses</option>
+        <option value="done">Fully completed</option>
+        <option value="partial">Partially filled</option>
+        <option value="none">Not filled</option>
+      </select>
+      <div class="seg">
+        <button id="segLeaders" class="on" onclick="setScope('leaders')">Leaders only</button>
+        <button id="segAll" onclick="setScope('all')">Everyone</button>
+      </div>
+      <span class="result-count" id="fCount"></span>
     </div>
     <div id="adminBody"><div class="loading">Loading…</div></div>
     <div id="adminDetail"></div>
@@ -223,7 +246,8 @@ const FORMS = {
 const FORM_ORDER = ['MANAGER','TEAM','PEER','VENDOR'];
 const FORM_SHORT = {VENDOR:'Cross-Dept',PEER:'Peer',TEAM:'Team ↑ (upward)',MANAGER:'Manager ↓ (downward)'};
 
-let state = { me: null, email: null, assignments: [], adminData: null };
+let state = { me: null, email: null, assignments: [], adminData: null,
+  af: { q:'', dept:'', status:'', scope:'leaders' } };
 
 /* ---------- JSONP ---------- */
 let jsonpN = 0;
@@ -368,11 +392,12 @@ document.getElementById('btnAdmin').onclick = async () => {
   const r = await api({action:'dashboard', pin});
   if (!r.ok) { document.getElementById('adminBody').innerHTML = '<div class="loading">'+r.error+'</div>'; return; }
   state.adminData = r.receivers; state.adminPin = pin;
+  initAdminFilters();
   renderAdmin();
 };
 document.getElementById('btnRefresh').onclick = async () => {
   const r = await api({action:'dashboard', pin: state.adminPin});
-  if (r.ok) { state.adminData = r.receivers; renderAdmin(); }
+  if (r.ok) { state.adminData = r.receivers; initAdminFilters(); renderAdmin(); }
 };
 function sp(v){ if(v==null) return '<span class="score-pill s-na">—</span>';
   const c = v>=8?'s-hi':v>=6?'s-mid':'s-lo';
@@ -380,10 +405,55 @@ function sp(v){ if(v==null) return '<span class="score-pill s-na">—</span>';
 function compl(c){ const t=c.VENDOR.t+c.PEER.t+c.TEAM.t+c.MANAGER.t, d=c.VENDOR.d+c.PEER.d+c.TEAM.d+c.MANAGER.d;
   return `<b>${t?Math.round(d/t*100):0}%</b> <span class="mini">${d}/${t}</span>`; }
 
+function isLeader(L) {
+  // team members receive ONLY Manager ↓ reviews; leaders receive vendor/peer/upward
+  const c = L.completion;
+  return (c.VENDOR.t + c.PEER.t + c.TEAM.t) > 0;
+}
+function statusOf(L) {
+  const c = L.completion;
+  const t = c.VENDOR.t + c.PEER.t + c.TEAM.t + c.MANAGER.t;
+  const d = c.VENDOR.d + c.PEER.d + c.TEAM.d + c.MANAGER.d;
+  if (t > 0 && d >= t) return 'done';
+  if (d > 0) return 'partial';
+  return 'none';
+}
+function setScope(s) {
+  state.af.scope = s;
+  document.getElementById('segLeaders').classList.toggle('on', s==='leaders');
+  document.getElementById('segAll').classList.toggle('on', s==='all');
+  renderAdmin();
+}
+function initAdminFilters() {
+  const bar = document.getElementById('adminFilters');
+  bar.style.display = 'flex';
+  const depts = [...new Set(state.adminData.map(L => L.dept).filter(Boolean))].sort();
+  const sel = document.getElementById('fDept');
+  sel.innerHTML = '<option value="">All departments</option>' + depts.map(d => `<option>${d}</option>`).join('');
+  sel.value = state.af.dept && depts.includes(state.af.dept) ? state.af.dept : '';
+  document.getElementById('fSearch').value = state.af.q;
+  document.getElementById('fStatus').value = state.af.status;
+  document.getElementById('fSearch').oninput = e => { state.af.q = e.target.value; renderAdmin(); };
+  sel.onchange = e => { state.af.dept = e.target.value; renderAdmin(); };
+  document.getElementById('fStatus').onchange = e => { state.af.status = e.target.value; renderAdmin(); };
+}
 function renderAdmin() {
+  const f = state.af, q = f.q.trim().toLowerCase();
+  const list = state.adminData.filter(L =>
+    (f.scope === 'all' || isLeader(L)) &&
+    (!q || L.name.toLowerCase().includes(q)) &&
+    (!f.dept || L.dept === f.dept) &&
+    (!f.status || statusOf(L) === f.status)
+  );
+  document.getElementById('fCount').textContent = list.length + ' of ' + state.adminData.length;
+  document.getElementById('adminDetail').innerHTML = '';
+  if (!list.length) {
+    document.getElementById('adminBody').innerHTML = '<div class="loading">No one matches these filters.</div>';
+    return;
+  }
   let html = `<table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
     <th>Overall</th><th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Manager ↓</th><th>Completion</th></tr>`;
-  state.adminData.forEach((L,i) => {
+  list.forEach((L,i) => {
     const fa = L.formAvgs;
     html += `<tr onclick="adminDetail('${L.key}')"><td>${i+1}</td><td><b>${L.name}</b></td><td class="mini">${L.dept}</td>
       <td>${sp(L.overall)}</td>
