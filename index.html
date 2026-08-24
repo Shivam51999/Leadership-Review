@@ -525,7 +525,7 @@ function renderAdmin() {
   document.getElementById('fCount').textContent = list.length + ' of ' + state.adminData.length;
   document.getElementById('adminDetail').innerHTML = '';
   if (!list.length) {
-    document.getElementById('adminBody').innerHTML = '<div class="loading">No one matches these filters.</div>';
+    document.getElementById('adminBody').innerHTML = '<div class="loading">No one matches these filters.</div>' + (state.showHeatmap ? renderHeatmap() : '');
     return;
   }
   // sort by chosen rank basis when viewing leaders; otherwise keep overall-score order
@@ -560,8 +560,24 @@ function renderAdmin() {
 }
 function renderHeatmap() {
   const vals = state.coreValueList || [];
-  if (!vals.length) return '';
+  if (!vals.length) {
+    return `<div class="detail-card" style="margin-top:16px">
+      <h3 class="serif" style="color:var(--espresso)">Core Values — Org Heatmap</h3>
+      <div class="mini" style="margin-top:8px;color:var(--red)">
+        No core-value data came back from the backend. This usually means the Apps Script
+        deployment is still serving an older version of Code.gs — open Apps Script →
+        Deploy → Manage deployments → Edit (pencil) → set Version to "New version" → Deploy,
+        then click Refresh here.
+      </div>
+    </div>`;
+  }
   const leaders = state.adminData.filter(isLeader).slice().sort((a,b) => (b.lis||0) - (a.lis||0));
+  if (!leaders.length) {
+    return `<div class="detail-card" style="margin-top:16px">
+      <h3 class="serif" style="color:var(--espresso)">Core Values — Org Heatmap</h3>
+      <div class="mini" style="margin-top:8px">No leaders with responses yet.</div>
+    </div>`;
+  }
   let html = `<div class="detail-card" style="margin-top:16px">
     <h3 class="serif" style="color:var(--espresso)">Core Values — Org Heatmap</h3>
     <div class="mini" style="margin-top:2px">Respect for Tradition · Trust at the Core · Wellbeing First · Purposeful Growth · Spirit of Togetherness</div>
