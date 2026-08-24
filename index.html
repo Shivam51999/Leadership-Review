@@ -110,6 +110,32 @@ textarea:focus{border-color:var(--gold)}
 .comment{background:#FAF6F0;border-left:3px solid var(--gold);padding:10px 13px;border-radius:0 9px 9px 0;margin-top:9px;font-size:13.5px}
 .comment .who{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
 .loading{text-align:center;padding:70px 0;color:var(--muted);font-weight:700}
+
+/* leadership intelligence */
+.tier{font-size:10.5px;font-weight:800;letter-spacing:.5px;padding:3px 9px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+.tier-top{background:#E4F3E5;color:#2E7D32}
+.tier-above{background:#E1EDF7;color:#1F5E8C}
+.tier-avg{background:#FBF0DC;color:#B26A00}
+.tier-needs{background:#FCE4E1;color:#C0392B}
+.conf-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;white-space:nowrap}
+.conf-High{background:#E4F3E5;color:#2E7D32}
+.conf-Moderate{background:#FBF0DC;color:#B26A00}
+.conf-Low{background:#FCE4E1;color:#C0392B}
+.conf-NA{background:#F0EBE4;color:#9A8C82}
+.lis-pill{font-size:16px;padding:6px 14px;border-radius:9px}
+.vbar-row{display:flex;align-items:center;gap:12px;margin:9px 0}
+.vbar-label{width:160px;font-size:13px;font-weight:700;flex-shrink:0}
+.vbar-track{flex:1;height:14px;background:#F0EBE4;border-radius:8px;position:relative}
+.vbar-fill{height:100%;border-radius:8px;transition:.3s}
+.vbar-org{position:absolute;top:-3px;width:2px;height:20px;background:var(--espresso);border-radius:1px}
+.vbar-val{width:42px;text-align:right;font-weight:800;font-size:13px;flex-shrink:0}
+.insight-box{background:#FAF6F0;border-left:3px solid var(--gold);padding:13px 16px;border-radius:0 9px 9px 0;margin-top:16px;font-size:13.5px;line-height:1.75}
+.insight-box b{color:var(--espresso)}
+.heatmap-table{width:100%;border-collapse:separate;border-spacing:4px;margin-top:10px}
+.heatmap-table td,.heatmap-table th{padding:9px 10px;font-size:12px;text-align:center;border-radius:7px}
+.heatmap-table th{background:var(--espresso);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.heatmap-table td.nm{text-align:left;font-weight:700;background:transparent;color:var(--ink);white-space:nowrap}
+.rank-basis-note{font-size:11.5px;color:var(--muted);margin-left:4px}
 @media(max-width:640px){.modal{padding:22px 18px}.scale button{width:38px;height:36px}}
 </style>
 </head>
@@ -159,8 +185,11 @@ textarea:focus{border-color:var(--gold)}
   <!-- ADMIN -->
   <div id="viewAdmin" class="hidden">
     <div class="hero">
-      <div><h2>Leadership Scorecard</h2><div class="sub">Weighted across all feedback channels · click a name for detail</div></div>
-      <button class="btn btn-lite" id="btnRefresh">Refresh</button>
+      <div><h2>Leadership Scorecard</h2><div class="sub">Leadership Intelligence Score · click a name for the full report card</div></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-lite" id="btnHeatmap">Values Heatmap</button>
+        <button class="btn btn-lite" id="btnRefresh">Refresh</button>
+      </div>
     </div>
     <div class="filter-bar" id="adminFilters" style="display:none">
       <input id="fSearch" placeholder="Search name…">
@@ -174,6 +203,10 @@ textarea:focus{border-color:var(--gold)}
       <div class="seg">
         <button id="segLeaders" class="on" onclick="setScope('leaders')">Leaders only</button>
         <button id="segAll" onclick="setScope('all')">Everyone</button>
+      </div>
+      <div class="seg" id="segRankBasis">
+        <button id="segCompany" class="on" onclick="setRankBasis('company')">Rank: Company-wide</button>
+        <button id="segPeerGroup" onclick="setRankBasis('peer')">Rank: By team size</button>
       </div>
       <span class="result-count" id="fCount"></span>
     </div>
@@ -250,8 +283,17 @@ const FORMS = {
 const FORM_ORDER = ['MANAGER','TEAM','PEER','VENDOR'];
 const FORM_SHORT = {VENDOR:'Cross-Dept',PEER:'Peer',TEAM:'Team ↑ (upward)',MANAGER:'Manager ↓ (downward)'};
 
+const CORE_VALUE_COLOR = {
+  'Respect for Tradition': '#B08D57',
+  'Trust at the Core': '#1F5E8C',
+  'Wellbeing First': '#2E7D32',
+  'Purposeful Growth': '#C0392B',
+  'Spirit of Togetherness': '#6A3F91'
+};
+
 let state = { me: null, email: null, assignments: [], adminData: null,
-  af: { q:'', dept:'', status:'', scope:'leaders' } };
+  coreValueList: [], orgValueAvg: {}, showHeatmap: false,
+  af: { q:'', dept:'', status:'', scope:'leaders', rankBasis:'company' } };
 
 /* ---------- JSONP ---------- */
 let jsonpN = 0;
@@ -396,13 +438,19 @@ document.getElementById('btnAdmin').onclick = async () => {
   const r = await api({action:'dashboard', pin});
   if (!r.ok) { document.getElementById('adminBody').innerHTML = '<div class="loading">'+r.error+'</div>'; return; }
   state.adminData = r.receivers; state.adminPin = pin;
+  state.coreValueList = r.coreValues || []; state.orgValueAvg = r.orgValueAvg || {};
   initAdminFilters();
   renderAdmin();
 };
 document.getElementById('btnRefresh').onclick = async () => {
   const r = await api({action:'dashboard', pin: state.adminPin});
-  if (r.ok) { state.adminData = r.receivers; initAdminFilters(); renderAdmin(); }
+  if (r.ok) {
+    state.adminData = r.receivers;
+    state.coreValueList = r.coreValues || []; state.orgValueAvg = r.orgValueAvg || {};
+    initAdminFilters(); renderAdmin();
+  }
 };
+document.getElementById('btnHeatmap').onclick = () => { state.showHeatmap = !state.showHeatmap; renderAdmin(); };
 function sp(v){ if(v==null) return '<span class="score-pill s-na">—</span>';
   const c = v>=8?'s-hi':v>=6?'s-mid':'s-lo';
   return `<span class="score-pill ${c}">${v.toFixed(1)}</span>`; }
@@ -422,10 +470,27 @@ function statusOf(L) {
   if (d > 0) return 'partial';
   return 'none';
 }
+function tierClass(t) {
+  return t==='Top Performer' ? 'tier-top' : t==='Above Average' ? 'tier-above' : t==='Average' ? 'tier-avg' : 'tier-needs';
+}
+function confClass(c) {
+  return 'conf-' + (c==='N/A' ? 'NA' : c);
+}
+function heatClass(v) {
+  if (v==null) return 's-na';
+  return v>=8 ? 's-hi' : v>=6 ? 's-mid' : 's-lo';
+}
 function setScope(s) {
   state.af.scope = s;
   document.getElementById('segLeaders').classList.toggle('on', s==='leaders');
   document.getElementById('segAll').classList.toggle('on', s==='all');
+  document.getElementById('segRankBasis').style.display = s==='leaders' ? 'flex' : 'none';
+  renderAdmin();
+}
+function setRankBasis(b) {
+  state.af.rankBasis = b;
+  document.getElementById('segCompany').classList.toggle('on', b==='company');
+  document.getElementById('segPeerGroup').classList.toggle('on', b==='peer');
   renderAdmin();
 }
 function initAdminFilters() {
@@ -440,10 +505,11 @@ function initAdminFilters() {
   document.getElementById('fSearch').oninput = e => { state.af.q = e.target.value; renderAdmin(); };
   sel.onchange = e => { state.af.dept = e.target.value; renderAdmin(); };
   document.getElementById('fStatus').onchange = e => { state.af.status = e.target.value; renderAdmin(); };
+  document.getElementById('segRankBasis').style.display = state.af.scope==='leaders' ? 'flex' : 'none';
 }
 function renderAdmin() {
   const f = state.af, q = f.q.trim().toLowerCase();
-  const list = state.adminData.filter(L =>
+  let list = state.adminData.filter(L =>
     (f.scope === 'all' || isLeader(L)) &&
     (!q || L.name.toLowerCase().includes(q)) &&
     (!f.dept || L.dept === f.dept) &&
@@ -455,26 +521,97 @@ function renderAdmin() {
     document.getElementById('adminBody').innerHTML = '<div class="loading">No one matches these filters.</div>';
     return;
   }
+  // sort by chosen rank basis when viewing leaders; otherwise keep overall-score order
+  if (f.scope !== 'all') {
+    list = list.slice().sort((a,b) => {
+      const ra = f.rankBasis==='peer' ? (a.peerRank || 9999) : (a.rank || 9999);
+      const rb = f.rankBasis==='peer' ? (b.peerRank || 9999) : (b.rank || 9999);
+      return ra - rb;
+    });
+  }
   let html = `<div class="table-frame"><table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
-    <th>Overall</th><th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Manager ↓</th><th>Completion</th></tr>`;
+    <th>Rank</th><th>LIS</th><th>Tier</th><th>Span</th>
+    <th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Manager ↓</th><th>Completion</th></tr>`;
   list.forEach((L,i) => {
     const fa = L.formAvgs;
+    const rankTxt = L.isLeader
+      ? (f.rankBasis==='peer'
+          ? (L.peerRank ? `#${L.peerRank} / ${L.peerRankOf}` : '—')
+          : (L.rank ? `#${L.rank} / ${L.rankOf}` : '—'))
+      : '—';
     html += `<tr onclick="adminDetail('${L.key}')"><td>${i+1}</td><td><b>${L.name}</b></td><td class="mini">${L.dept}</td>
-      <td>${sp(L.overall)}</td>
+      <td class="mini">${rankTxt}</td>
+      <td>${L.lis!=null ? sp(L.lis) : '<span class="score-pill s-na">—</span>'}</td>
+      <td>${L.tier ? `<span class="tier ${tierClass(L.tier)}">${L.tier}</span>` : '—'}</td>
+      <td class="mini">${L.isLeader ? L.spanOfImpact : '—'}</td>
       <td>${sp(fa.VENDOR&&fa.VENDOR.avg)}</td><td>${sp(fa.PEER&&fa.PEER.avg)}</td>
       <td>${sp(fa.TEAM&&fa.TEAM.avg)}</td><td>${sp(fa.MANAGER&&fa.MANAGER.avg)}</td>
       <td>${compl(L.completion)}</td></tr>`;
   });
   html += '</table></div>';
-  document.getElementById('adminBody').innerHTML = html;
+  document.getElementById('adminBody').innerHTML = html + (state.showHeatmap ? renderHeatmap() : '');
+}
+function renderHeatmap() {
+  const vals = state.coreValueList || [];
+  if (!vals.length) return '';
+  const leaders = state.adminData.filter(isLeader).slice().sort((a,b) => (b.lis||0) - (a.lis||0));
+  let html = `<div class="detail-card" style="margin-top:16px">
+    <h3 class="serif" style="color:var(--espresso)">Core Values — Org Heatmap</h3>
+    <div class="mini" style="margin-top:2px">Respect for Tradition · Trust at the Core · Wellbeing First · Purposeful Growth · Spirit of Togetherness</div>
+    <div style="overflow:auto"><table class="heatmap-table"><tr><th style="text-align:left">Leader</th>${vals.map(v=>`<th>${v}</th>`).join('')}</tr>`;
+  html += `<tr><td class="nm">Org Average</td>${vals.map(v => {
+    const s = state.orgValueAvg[v];
+    return `<td class="score-pill ${heatClass(s)}">${s!=null ? s.toFixed(1) : '—'}</td>`;
+  }).join('')}</tr>`;
+  leaders.forEach(L => {
+    html += `<tr><td class="nm">${L.name}</td>${vals.map(v => {
+      const s = L.coreValues && L.coreValues[v];
+      return `<td class="score-pill ${heatClass(s)}">${s!=null ? s.toFixed(1) : '—'}</td>`;
+    }).join('')}</tr>`;
+  });
+  html += '</table></div></div>';
+  return html;
 }
 function adminDetail(id) {
   const L = state.adminData.find(x => x.key===id);
   let html = `<div class="detail-card"><h3 class="serif" style="color:var(--espresso)">${L.name} <span class="mini">· ${L.dept} · ${L.responses} responses</span></h3>`;
+
+  if (L.isLeader && L.lis != null) {
+    html += `<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 6px">
+      <span class="score-pill lis-pill ${L.lis>=8?'s-hi':L.lis>=6?'s-mid':'s-lo'}">${L.lis.toFixed(1)} LIS</span>
+      <span class="tier ${tierClass(L.tier)}">${L.tier}</span>
+      <span class="mini">Company-wide #${L.rank} of ${L.rankOf}</span>
+      <span class="mini">·  ${L.teamSizeBucket} peer group #${L.peerRank} of ${L.peerRankOf}</span>
+      <span class="mini">·  Span of impact: <b>${L.spanOfImpact}</b> direct reports</span>
+    </div>`;
+
+    html += `<div style="margin-top:14px"><b class="serif" style="color:var(--espresso);font-size:15px">Core Values</b>`;
+    (state.coreValueList || []).forEach(v => {
+      const s = L.coreValues[v], org = state.orgValueAvg[v];
+      const pct = s!=null ? Math.min(100, s/10*100) : 0;
+      const orgPct = org!=null ? Math.min(100, org/10*100) : 0;
+      html += `<div class="vbar-row"><div class="vbar-label">${v}</div>
+        <div class="vbar-track"><div class="vbar-fill" style="width:${pct}%;background:${CORE_VALUE_COLOR[v]||'var(--gold)'}"></div>
+        ${org!=null ? `<div class="vbar-org" style="left:${orgPct}%" title="Org average ${org.toFixed(1)}"></div>` : ''}
+        </div>
+        <div class="vbar-val">${s!=null ? s.toFixed(1) : '—'}</div></div>`;
+    });
+    html += `<div class="mini" style="margin-top:2px">Dark tick = Mangalam org average for that value</div></div>`;
+
+    if (L.strengths && L.strengths.length) {
+      html += `<div class="insight-box">
+        <b>Strengths:</b> ${L.strengths.join(' & ')}<br>
+        <b>Growth areas:</b> ${L.growthAreas.join(' & ')}<br>
+        <b>Mission link:</b> ${L.missionLine}
+      </div>`;
+    }
+  }
+
   FORM_ORDER.forEach(f => {
     const S = L.formAvgs[f]; if (!S) return;
     const F = FORMS[f];
-    html += `<div style="margin-top:16px"><span class="badge ${F.badge}">${F.title}</span> <span class="mini">avg ${S.avg} · n=${S.n}</span>`;
+    const cf = L.confidence && L.confidence[f];
+    html += `<div style="margin-top:16px"><span class="badge ${F.badge}">${F.title}</span> <span class="mini">avg ${S.avg} · n=${S.n}</span>${cf ? `<span class="conf-badge ${confClass(cf)}">${cf} confidence</span>` : ''}`;
     F.questions.forEach((q,i) => { if (S.q[i]) html += `<div class="qrow"><span>${q[0]}</span><b>${S.q[i].toFixed(1)}</b></div>`; });
     if (S.tenure && Object.keys(S.tenure).length)
       html += `<div class="qrow"><span>Expected tenure</span><b>${Object.entries(S.tenure).map(([k,v])=>k+' ×'+v).join(', ')}</b></div>`;
