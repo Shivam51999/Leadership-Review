@@ -132,9 +132,10 @@ textarea:focus{border-color:var(--gold)}
 .insight-box{background:#FAF6F0;border-left:3px solid var(--gold);padding:13px 16px;border-radius:0 9px 9px 0;margin-top:16px;font-size:13.5px;line-height:1.75}
 .insight-box b{color:var(--espresso)}
 .heatmap-table{width:100%;border-collapse:separate;border-spacing:4px;margin-top:10px}
-.heatmap-table td,.heatmap-table th{padding:9px 10px;font-size:12px;text-align:center;border-radius:7px}
+.heatmap-table td,.heatmap-table th{padding:6px;font-size:12px;text-align:center;border-radius:7px}
 .heatmap-table th{background:var(--espresso);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
 .heatmap-table td.nm{text-align:left;font-weight:700;background:transparent;color:var(--ink);white-space:nowrap}
+.heatmap-table td .score-pill{display:block;width:100%}
 .rank-basis-note{font-size:11.5px;color:var(--muted);margin-left:4px}
 .sent-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px}
 .sent-Positive{background:#E4F3E5;color:#2E7D32}
@@ -584,12 +585,12 @@ function renderHeatmap() {
     <div style="overflow:auto"><table class="heatmap-table"><tr><th style="text-align:left">Leader</th>${vals.map(v=>`<th>${v}</th>`).join('')}</tr>`;
   html += `<tr><td class="nm">Org Average</td>${vals.map(v => {
     const s = state.orgValueAvg[v];
-    return `<td class="score-pill ${heatClass(s)}">${s!=null ? s.toFixed(1) : '—'}</td>`;
+    return `<td><span class="score-pill ${heatClass(s)}">${s!=null ? s.toFixed(1) : '—'}</span></td>`;
   }).join('')}</tr>`;
   leaders.forEach(L => {
     html += `<tr><td class="nm">${L.name}</td>${vals.map(v => {
       const s = L.coreValues && L.coreValues[v];
-      return `<td class="score-pill ${heatClass(s)}">${s!=null ? s.toFixed(1) : '—'}</td>`;
+      return `<td><span class="score-pill ${heatClass(s)}">${s!=null ? s.toFixed(1) : '—'}</span></td>`;
     }).join('')}</tr>`;
   });
   html += '</table></div></div>';
