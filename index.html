@@ -94,11 +94,15 @@ textarea:focus{border-color:var(--gold)}
 .seg button{border:none;background:#fff;padding:10px 14px;font-family:'Mulish';font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
 .seg button.on{background:var(--espresso);color:#fff}
 .result-count{font-size:12px;color:var(--muted);font-weight:700;margin-left:auto}
-.admin-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
-.admin-table th{background:var(--espresso);color:#fff;font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;padding:11px 12px;text-align:left}
-.admin-table td{padding:11px 12px;border-bottom:1px solid #F1EAE2;font-size:13.5px}
+.table-frame{max-height:58vh;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(59,42,38,.05)}
+.table-frame::-webkit-scrollbar{width:9px;height:9px}
+.table-frame::-webkit-scrollbar-thumb{background:#D9CCC3;border-radius:6px}
+.table-frame::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+.admin-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}
+.admin-table th{position:sticky;top:0;z-index:5;background:var(--espresso);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.8px;padding:9px 12px;text-align:left;box-shadow:0 1px 0 var(--espresso)}
+.admin-table td{padding:8px 12px;border-bottom:1px solid #F1EAE2;font-size:13px}
 .admin-table tr:hover td{background:#FAF6F0;cursor:pointer}
-.score-pill{display:inline-block;min-width:44px;text-align:center;padding:4px 8px;border-radius:8px;font-weight:800;font-size:13px}
+.score-pill{display:inline-block;min-width:40px;text-align:center;padding:3px 7px;border-radius:7px;font-weight:800;font-size:12.5px}
 .s-hi{background:#E4F3E5;color:#2E7D32}.s-mid{background:#FBF0DC;color:#B26A00}.s-lo{background:#FCE4E1;color:#C0392B}.s-na{background:#F0EBE4;color:#9A8C82}
 .mini{font-size:11.5px;color:var(--muted)}
 .detail-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:16px}
@@ -451,7 +455,7 @@ function renderAdmin() {
     document.getElementById('adminBody').innerHTML = '<div class="loading">No one matches these filters.</div>';
     return;
   }
-  let html = `<table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
+  let html = `<div class="table-frame"><table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
     <th>Overall</th><th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Manager ↓</th><th>Completion</th></tr>`;
   list.forEach((L,i) => {
     const fa = L.formAvgs;
@@ -461,7 +465,7 @@ function renderAdmin() {
       <td>${sp(fa.TEAM&&fa.TEAM.avg)}</td><td>${sp(fa.MANAGER&&fa.MANAGER.avg)}</td>
       <td>${compl(L.completion)}</td></tr>`;
   });
-  html += '</table>';
+  html += '</table></div>';
   document.getElementById('adminBody').innerHTML = html;
 }
 function adminDetail(id) {
