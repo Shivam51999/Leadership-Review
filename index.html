@@ -136,6 +136,12 @@ textarea:focus{border-color:var(--gold)}
 .heatmap-table th{background:var(--espresso);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
 .heatmap-table td.nm{text-align:left;font-weight:700;background:transparent;color:var(--ink);white-space:nowrap}
 .rank-basis-note{font-size:11.5px;color:var(--muted);margin-left:4px}
+.sent-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px}
+.sent-Positive{background:#E4F3E5;color:#2E7D32}
+.sent-Constructive{background:#FBF0DC;color:#B26A00}
+.sent-Watch-out{background:#FCE4E1;color:#C0392B}
+.rate-col{flex:1;min-width:240px}
+.rate-col-h{font-size:14px;color:var(--espresso);margin-bottom:4px}
 @media(max-width:640px){.modal{padding:22px 18px}.scale button{width:38px;height:36px}}
 </style>
 </head>
@@ -480,6 +486,7 @@ function heatClass(v) {
   if (v==null) return 's-na';
   return v>=8 ? 's-hi' : v>=6 ? 's-mid' : 's-lo';
 }
+function sentClass(s) { return 'sent-' + s; }
 function setScope(s) {
   state.af.scope = s;
   document.getElementById('segLeaders').classList.toggle('on', s==='leaders');
@@ -600,10 +607,37 @@ function adminDetail(id) {
 
     if (L.strengths && L.strengths.length) {
       html += `<div class="insight-box">
-        <b>Strengths:</b> ${L.strengths.join(' & ')}<br>
-        <b>Growth areas:</b> ${L.growthAreas.join(' & ')}<br>
-        <b>Mission link:</b> ${L.missionLine}
+        <b>Values summary:</b> strongest in ${L.strengths.join(' & ')}; growth focus on ${L.growthAreas.join(' & ')}.<br>
+        <span class="mini">${L.missionLine}</span>
       </div>`;
+    }
+
+    if ((L.ratingTop && L.ratingTop.length) || (L.ratingBottom && L.ratingBottom.length)) {
+      html += `<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px">
+        <div class="rate-col">
+          <div class="rate-col-h serif">Strengths — from ratings</div>
+          ${(L.ratingTop||[]).map(r=>`<div class="qrow"><span>${r.label} <span class="mini">(${FORM_SHORT[r.form]})</span></span><b style="color:#2E7D32">${r.score.toFixed(1)}</b></div>`).join('') || '<div class="mini">Not enough data yet</div>'}
+        </div>
+        <div class="rate-col">
+          <div class="rate-col-h serif">Areas of improvement — from ratings</div>
+          ${(L.ratingBottom||[]).map(r=>`<div class="qrow"><span>${r.label} <span class="mini">(${FORM_SHORT[r.form]})</span></span><b style="color:#C0392B">${r.score.toFixed(1)}</b></div>`).join('') || '<div class="mini">Not enough data yet</div>'}
+        </div>
+      </div>`;
+    }
+
+    if ((L.remarkPositive && L.remarkPositive.length) || (L.remarkImprovement && L.remarkImprovement.length)) {
+      html += `<div style="margin-top:16px">
+        <div class="rate-col-h serif">What people are saying — from remarks</div>
+        <div class="mini" style="margin-bottom:8px">Auto-tagged from comment wording — read each one in context, it's a pointer, not a verdict.</div>`;
+      if (L.remarkPositive && L.remarkPositive.length) {
+        html += `<div class="mini" style="font-weight:800;color:#2E7D32;letter-spacing:.4px;margin-top:4px">STRENGTHS</div>`;
+        L.remarkPositive.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}</div>${c.text}</div>`);
+      }
+      if (L.remarkImprovement && L.remarkImprovement.length) {
+        html += `<div class="mini" style="font-weight:800;color:#B26A00;letter-spacing:.4px;margin-top:10px">AREAS OF IMPROVEMENT</div>`;
+        L.remarkImprovement.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}<span class="sent-badge ${sentClass(c.sentiment)}">${c.sentiment}</span></div>${c.text}</div>`);
+      }
+      html += `</div>`;
     }
   }
 
@@ -618,8 +652,8 @@ function adminDetail(id) {
     html += '</div>';
   });
   if (L.comments.length) {
-    html += `<div style="margin-top:18px"><b class="serif" style="color:var(--espresso)">Comments</b>`;
-    L.comments.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}</div>${c.text}</div>`);
+    html += `<div style="margin-top:18px"><b class="serif" style="color:var(--espresso)">All Comments</b>`;
+    L.comments.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}${c.sentiment?`<span class="sent-badge ${sentClass(c.sentiment)}">${c.sentiment}</span>`:''}</div>${c.text}</div>`);
     html += '</div>';
   }
   html += '</div>';
