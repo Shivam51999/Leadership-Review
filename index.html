@@ -153,7 +153,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="mark">M</div>
     <div>
       <h1>Leadership Review 2026</h1>
-      <div class="sub">Mangalam Landmarks · Leadership Feedback — Upward · Peer · Cross-Dept · Team</div>
+      <div class="sub">Mangalam Landmarks · Leadership Feedback — Upward · Peer · Customer · Team</div>
     </div>
   </div>
   <div class="right">
@@ -231,7 +231,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycby9lBxwPbcGYeh3Gl9ztPTG
 
 const FORMS = {
   VENDOR: {
-    title: 'Vendor / Cross-Department Feedback',
+    title: 'Customer / Cross-Department Feedback',
     badge: 'b-vendor', anchors: ['Not at all likely','Extremely likely'],
     note: 'Cross-department leaders you work with — rate them.',
     questions: [
@@ -288,7 +288,7 @@ const FORMS = {
   }
 };
 const FORM_ORDER = ['MANAGER','TEAM','PEER','VENDOR'];
-const FORM_SHORT = {VENDOR:'Cross-Dept',PEER:'Peer',TEAM:'Team ↑ (upward)',MANAGER:'Manager ↓ (downward)'};
+const FORM_SHORT = {VENDOR:'Customer',PEER:'Peer',TEAM:'Team ↑ (upward)',MANAGER:'Reporting Manager'};
 
 const CORE_VALUE_COLOR = {
   'Respect for Tradition': '#B08D57',
@@ -539,7 +539,7 @@ function renderAdmin() {
   }
   let html = `<div class="table-frame"><table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
     <th>Rank</th><th>LIS</th><th>Tier</th><th>Span</th>
-    <th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Manager ↓</th><th>Completion</th></tr>`;
+    <th>Customer</th><th>Peer</th><th>Team ↑</th><th>Reporting Mgr</th><th>Completion</th></tr>`;
   list.forEach((L,i) => {
     const fa = L.formAvgs;
     const rankTxt = L.isLeader
