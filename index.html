@@ -194,9 +194,14 @@ textarea:focus{border-color:var(--gold)}
         <div class="seg">
           <button id="segByRecv" class="on" onclick="setAuditMode('receiver')">By Receiver</button>
           <button id="segByGiver" onclick="setAuditMode('giver')">By Giver</button>
+          <button id="segPending" onclick="setAuditMode('pending')">Pending Givers</button>
         </div>
         <input id="auditWho" list="auditNames" placeholder="Type a name…" style="min-width:260px">
         <datalist id="auditNames"></datalist>
+        <div class="seg" id="pendScopeSeg" style="display:none">
+          <button id="pendAll" class="on" onclick="setPendScope('all')">All givers</button>
+          <button id="pendLeaders" onclick="setPendScope('leaders')">Leaders only</button>
+        </div>
         <span class="result-count" id="auditCount"></span>
       </div>
       <div id="auditBody"><div class="loading">Select a person to see their reviews.</div></div>
@@ -274,7 +279,7 @@ const FORM_SHORT = {VENDOR:'Cross-Dept',PEER:'Peer',TEAM:'Team ↑ (upward)',MAN
 
 let state = { me: null, email: null, assignments: [], adminData: null,
   af: { q:'', dept:'', status:'', scope:'leaders' },
-  adminTab: 'score', audit: null, auditMode: 'receiver', auditWho: '' };
+  adminTab: 'score', audit: null, auditMode: 'receiver', auditWho: '', pendScope: 'all' };
 
 /* ---------- JSONP ---------- */
 let jsonpN = 0;
@@ -456,20 +461,79 @@ async function loadAudit() {
   r.responses.forEach(x => r.respMap[(x.giver+'|'+x.rkey+'|'+x.form).toLowerCase()] = x);
   state.audit = r;
   fillAuditNames();
-  document.getElementById('auditBody').innerHTML = '<div class="loading">Select a person to see their reviews.</div>';
-  if (state.auditWho) renderAudit();
+  if (state.auditMode === 'pending') renderPending();
+  else {
+    document.getElementById('auditBody').innerHTML = '<div class="loading">Select a person to see their reviews.</div>';
+    if (state.auditWho) renderAudit();
+  }
 }
 function setAuditMode(m) {
   state.auditMode = m; state.auditWho = '';
   document.getElementById('segByRecv').classList.toggle('on', m==='receiver');
   document.getElementById('segByGiver').classList.toggle('on', m==='giver');
+  document.getElementById('segPending').classList.toggle('on', m==='pending');
+  document.getElementById('pendScopeSeg').style.display = m==='pending' ? 'flex' : 'none';
   document.getElementById('auditWho').value = '';
+  document.getElementById('auditWho').placeholder = m==='pending' ? 'Search giver…' : 'Type a name…';
   document.getElementById('auditCount').textContent = '';
   fillAuditNames();
-  document.getElementById('auditBody').innerHTML = '<div class="loading">Select a person to see their reviews.</div>';
+  if (m === 'pending') renderPending();
+  else document.getElementById('auditBody').innerHTML = '<div class="loading">Select a person to see their reviews.</div>';
+}
+function setPendScope(s) {
+  state.pendScope = s;
+  document.getElementById('pendAll').classList.toggle('on', s==='all');
+  document.getElementById('pendLeaders').classList.toggle('on', s==='leaders');
+  renderPending();
+}
+function leaderNameSet() {
+  // leaders = receivers with any Vendor/Peer/Team↑ incoming (from Scorecard data)
+  return new Set((state.adminData || []).filter(isLeader).map(L => L.name.toLowerCase()));
+}
+function renderPending() {
+  const A = state.audit; if (!A) return;
+  const leaders = leaderNameSet();
+  const q = state.auditWho.trim().toLowerCase();
+  const map = {};
+  A.assignments.forEach(a => {
+    const k = a.giver.toLowerCase();
+    if (!map[k]) map[k] = { name: a.giver, total: 0, done: 0 };
+    map[k].total++;
+    if (a.status === 'DONE') map[k].done++;
+  });
+  let list = Object.values(map);
+  if (state.pendScope === 'leaders') list = list.filter(g => leaders.has(g.name.toLowerCase()));
+  if (q) list = list.filter(g => g.name.toLowerCase().includes(q));
+  const pendingPeople = list.filter(g => g.done < g.total);
+  document.getElementById('auditCount').textContent =
+    pendingPeople.length + ' of ' + list.length + ' people have pending reviews';
+  // most pending first; fully done at the bottom
+  list.sort((a,b) => (b.total-b.done) - (a.total-a.done) || a.name.localeCompare(b.name));
+  let html = `<div class="table-frame"><table class="admin-table"><tr>
+    <th>Giver</th><th>Role</th><th>Assigned</th><th>Filled</th><th>Pending</th><th>Progress</th><th></th></tr>`;
+  list.forEach(g => {
+    const pend = g.total - g.done;
+    const pct = g.total ? Math.round(g.done/g.total*100) : 0;
+    html += `<tr><td><b>${g.name}</b></td>
+      <td class="mini">${leaders.has(g.name.toLowerCase()) ? 'Leader' : 'Team member'}</td>
+      <td>${g.total}</td>
+      <td><span class="chip-done">${g.done}</span></td>
+      <td>${pend ? '<span class="chip-pending">'+pend+'</span>' : '—'}</td>
+      <td><span class="score-pill ${pct===100?'s-hi':pct>0?'s-mid':'s-lo'}">${pct}%</span></td>
+      <td><button class="btn btn-lite" style="padding:5px 12px;font-size:12px" onclick="jumpToGiver('${g.name.replace(/'/g,"\\'")}')">View</button></td></tr>`;
+  });
+  html += '</table></div>';
+  document.getElementById('auditBody').innerHTML = html;
+}
+function jumpToGiver(name) {
+  setAuditMode('giver');
+  state.auditWho = name;
+  document.getElementById('auditWho').value = name;
+  renderAudit();
 }
 function fillAuditNames() {
   if (!state.audit) return;
+  if (state.auditMode === 'pending') { document.getElementById('auditNames').innerHTML=''; return; }
   const key = state.auditMode === 'receiver' ? 'receiver' : 'giver';
   const names = [...new Set(state.audit.assignments.map(a => a[key]))].sort();
   document.getElementById('auditNames').innerHTML = names.map(n => `<option>${n}</option>`).join('');
@@ -535,7 +599,7 @@ function initAdminFilters() {
   sel.onchange = e => { state.af.dept = e.target.value; renderAdmin(); };
   document.getElementById('fStatus').onchange = e => { state.af.status = e.target.value; renderAdmin(); };
   const aw = document.getElementById('auditWho');
-  aw.oninput = e => { state.auditWho = e.target.value; renderAudit(); };
+  aw.oninput = e => { state.auditWho = e.target.value; state.auditMode==='pending' ? renderPending() : renderAudit(); };
 }
 function renderAdmin() {
   const f = state.af, q = f.q.trim().toLowerCase();
