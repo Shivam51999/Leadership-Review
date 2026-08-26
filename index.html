@@ -1,288 +1,601 @@
-/**
- * MANGALAM — LEADERSHIP REVIEW 2026 (Backend)  v4 — leaders as receivers + downward team reviews
- * ---------------------------------------------------------------------
- * Direction: the 32 leaders (+SSS/RP) are RECEIVERS. Everyone mapped is a giver.
- *   VENDOR : giver reviews a cross-department leader
- *   PEER   : giver reviews a peer leader
- *   TEAM   : giver reviews their own reporting manager / leader (upward)
- *   MANAGER: leader reviews their own team member (downward, with tenure question)
- *
- * Sheet tabs required:
- *   Givers      : Giver Name | Employee ID | Email | Department   (32 leaders, login master)
- *   Assignments : Giver | Receiver Key | Receiver Name | Receiver Department | Form Type | Status | Submitted At
- *   Responses   : auto-created on first submission
- *   Config      : B1 = admin pin (default 2026 if missing)
- *
- * Deploy: Web app · Execute as Me · Access: Anyone. JSONP GET endpoints:
- *   ?action=login&email=<email>
- *   ?action=submit&payload=<urlencoded json>
- *   ?action=dashboard&pin=<pin>
- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mangalam · Leadership Review 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --espresso:#3B2A26; --espresso-2:#4A342E; --red:#C0392B; --gold:#B08D57;
+  --cream:#F7F3EE; --card:#FFFFFF; --ink:#2B2320; --muted:#8A7B72; --line:#E8DFD6;
+  --green:#2E7D32; --amber:#B26A00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Mulish',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+h1,h2,h3,.serif{font-family:'Playfair Display',serif}
+.topbar{background:var(--espresso);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar .brand{display:flex;align-items:center;gap:12px}
+.topbar .mark{width:34px;height:34px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:800;font-size:18px}
+.topbar h1{font-size:18px;font-weight:700;letter-spacing:.3px}
+.topbar .sub{font-size:11px;color:#D9CCC3;letter-spacing:1.5px;text-transform:uppercase}
+.topbar .right{display:flex;gap:10px;align-items:center}
+.btn{border:none;border-radius:8px;padding:9px 16px;font-family:'Mulish',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
+.btn-ghost{background:transparent;color:#EADFD7;border:1px solid #6B554D}
+.btn-ghost:hover{background:#4A342E}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:#A93226}
+.btn-dark{background:var(--espresso);color:#fff}
+.btn-dark:hover{background:var(--espresso-2)}
+.btn-lite{background:#EFE7DD;color:var(--espresso)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 80px}
+.hidden{display:none!important}
 
-var SS = SpreadsheetApp.getActiveSpreadsheet;
+/* login */
+.login-card{max-width:520px;margin:60px auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:36px;box-shadow:0 10px 30px rgba(59,42,38,.08)}
+.login-card h2{font-size:26px;color:var(--espresso);margin-bottom:6px}
+.login-card p{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+.search-input{width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:10px;font-family:'Mulish';font-size:15px;outline:none}
+.search-input:focus{border-color:var(--gold)}
+.giver-list{margin-top:10px;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.giver-item{padding:11px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F1EAE2;font-size:14px}
+.giver-item:last-child{border-bottom:none}
+.giver-item:hover{background:#FAF5EF}
+.giver-item .cnt{font-size:11.5px;color:var(--muted);font-weight:700}
+.giver-item .cnt.done{color:var(--green)}
 
-var FORM_QUESTIONS = {
-  VENDOR: ['Demonstrates / shows by priority', 'Co-operative & supportive at work', 'Habits & actions inspire you'],
-  PEER:   ['Comfort of communication in critical situations', 'Respects you, your work & department', 'Gives genuine feedback about your work', 'Actions and habits inspire you', 'Skills, ideas & knowledge useful for org'],
-  TEAM:   ['Clearly communicates expectations', 'Gives regular feedback', 'Good listener, encourages sharing ideas', 'Shows appreciation when due', 'Invests in your growth & development'],
-  MANAGER: ['Ready for next challenge', 'Commitment level', 'Relationship level', 'Discipline level', 'Ease of working', 'Versatility level', 'Quality of work']
+/* my reviews */
+.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 26px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.hero h2{font-size:24px;color:var(--espresso)}
+.hero .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.progress-wrap{min-width:220px}
+.progress-bar{height:10px;background:#EFE7DD;border-radius:6px;overflow:hidden;margin-top:6px}
+.progress-bar>div{height:100%;background:linear-gradient(90deg,var(--gold),var(--red));border-radius:6px;transition:.4s}
+.progress-label{font-size:12.5px;font-weight:800;color:var(--espresso)}
+.section-title{font-size:17px;color:var(--espresso);margin:26px 0 4px;display:flex;align-items:center;gap:10px}
+.section-note{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.badge{font-size:10.5px;font-weight:800;letter-spacing:1px;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+.b-vendor{background:#EFE1F7;color:#6A3F91}.b-peer{background:#E1EDF7;color:#1F5E8C}
+.b-team{background:#E4F3E5;color:#2E7D32}.b-manager{background:#F9E9DA;color:#B26A00}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rcard .nm{font-weight:800;font-size:15px;color:var(--ink)}
+.rcard .dp{font-size:12px;color:var(--muted);margin-top:2px}
+.chip-done{color:var(--green);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:5px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(43,35,32,.55);display:flex;align-items:flex-start;justify-content:center;padding:30px 14px;z-index:100;overflow:auto}
+.modal{background:#fff;border-radius:16px;max-width:720px;width:100%;padding:30px 32px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.modal h3{font-size:21px;color:var(--espresso);margin-bottom:4px}
+.modal .reviewing{font-size:13.5px;color:var(--muted);margin-bottom:22px}
+.modal .reviewing b{color:var(--ink)}
+.q{margin-bottom:24px}
+.q .qe{font-weight:800;font-size:14.5px;margin-bottom:2px}
+.q .qm{font-size:13px;color:#6B5D54;margin-bottom:10px}
+.scale{display:flex;gap:7px;flex-wrap:wrap}
+.scale button{width:44px;height:40px;border:1.5px solid var(--line);background:#fff;border-radius:9px;font-family:'Mulish';font-weight:700;font-size:14px;cursor:pointer;transition:.12s}
+.scale button:hover{border-color:var(--gold)}
+.scale button.sel{background:var(--espresso);color:#fff;border-color:var(--espresso)}
+.anchors{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:5px}
+.pills{display:flex;gap:9px;flex-wrap:wrap}
+.pills button{padding:9px 16px;border:1.5px solid var(--line);border-radius:22px;background:#fff;font-family:'Mulish';font-weight:700;font-size:13px;cursor:pointer}
+.pills button.sel{background:var(--espresso);color:#fff;border-color:var(--espresso)}
+textarea{width:100%;min-height:92px;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-family:'Mulish';font-size:14px;resize:vertical;outline:none}
+textarea:focus{border-color:var(--gold)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.err{color:var(--red);font-size:12.5px;font-weight:700;margin-right:auto;align-self:center}
+
+/* admin */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.filter-bar input,.filter-bar select{padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-family:'Mulish';font-size:13.5px;font-weight:600;color:var(--ink);background:#fff;outline:none}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--gold)}
+.filter-bar input{min-width:210px}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:none;background:#fff;padding:10px 14px;font-family:'Mulish';font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--espresso);color:#fff}
+.result-count{font-size:12px;color:var(--muted);font-weight:700;margin-left:auto}
+.admin-tabs{display:flex;gap:8px;margin-bottom:14px}
+.admin-tabs button{border:1.5px solid var(--line);background:#fff;border-radius:22px;padding:9px 20px;font-family:'Mulish';font-weight:800;font-size:13px;cursor:pointer;color:var(--muted)}
+.admin-tabs button.on{background:var(--espresso);color:#fff;border-color:var(--espresso)}
+.chip-pending{color:var(--amber);font-weight:800;font-size:12px}
+.ratings-str{font-family:'Mulish';font-weight:700;letter-spacing:1px;color:var(--espresso);font-size:12.5px;white-space:nowrap}
+.cmt-cell{max-width:340px;font-size:12.5px;color:#5C4F47}
+.table-frame{max-height:58vh;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(59,42,38,.05)}
+.table-frame::-webkit-scrollbar{width:9px;height:9px}
+.table-frame::-webkit-scrollbar-thumb{background:#D9CCC3;border-radius:6px}
+.table-frame::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+.admin-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}
+.admin-table th{position:sticky;top:0;z-index:5;background:var(--espresso);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.8px;padding:9px 12px;text-align:left;box-shadow:0 1px 0 var(--espresso)}
+.admin-table td{padding:8px 12px;border-bottom:1px solid #F1EAE2;font-size:13px}
+.admin-table tr:hover td{background:#FAF6F0;cursor:pointer}
+.score-pill{display:inline-block;min-width:40px;text-align:center;padding:3px 7px;border-radius:7px;font-weight:800;font-size:12.5px}
+.s-hi{background:#E4F3E5;color:#2E7D32}.s-mid{background:#FBF0DC;color:#B26A00}.s-lo{background:#FCE4E1;color:#C0392B}.s-na{background:#F0EBE4;color:#9A8C82}
+.mini{font-size:11.5px;color:var(--muted)}
+.detail-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:16px}
+.qrow{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px dashed #EFE7DD}
+.comment{background:#FAF6F0;border-left:3px solid var(--gold);padding:10px 13px;border-radius:0 9px 9px 0;margin-top:9px;font-size:13.5px}
+.comment .who{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.loading{text-align:center;padding:70px 0;color:var(--muted);font-weight:700}
+@media(max-width:640px){.modal{padding:22px 18px}.scale button{width:38px;height:36px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">M</div>
+    <div>
+      <h1>Leadership Review 2026</h1>
+      <div class="sub">Mangalam Landmarks · Leadership Feedback — Upward · Peer · Cross-Dept · Team</div>
+    </div>
+  </div>
+  <div class="right">
+    <button class="btn btn-ghost" id="btnAdmin">Admin</button>
+    <button class="btn btn-ghost hidden" id="btnLogout">Switch user</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- LOGIN -->
+  <div id="viewLogin">
+    <div class="login-card">
+      <h2>Sign in with your email</h2>
+      <p>तुमचा नोंदणीकृत ईमेल आयडी टाका — Enter your registered email ID to see the leaders assigned to you for review. Your responses are confidential and go directly to management.</p>
+      <input class="search-input" id="emailInput" type="email" placeholder="name@example.com" autocomplete="email">
+      <div class="err" id="loginErr" style="margin-top:8px;display:block"></div>
+      <button class="btn btn-red" id="btnLogin" style="width:100%;margin-top:14px;padding:13px">Continue →</button>
+    </div>
+  </div>
+
+  <!-- MY REVIEWS -->
+  <div id="viewMine" class="hidden">
+    <div class="hero">
+      <div>
+        <h2 id="mineName"></h2>
+        <div class="sub">Rate each person assigned to you. एकदा जतन केल्यावर पुनरावलोकन बदलता येणार नाही.</div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label" id="mineProgressLabel"></div>
+        <div class="progress-bar"><div id="mineProgressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div id="mineSections"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="viewAdmin" class="hidden">
+    <div class="hero">
+      <div><h2>Leadership Scorecard</h2><div class="sub">Weighted across all feedback channels · click a name for detail</div></div>
+      <button class="btn btn-lite" id="btnRefresh">Refresh</button>
+    </div>
+    <div class="admin-tabs" id="adminTabs" style="display:none">
+      <button id="tabScore" class="on" onclick="setAdminTab('score')">Scorecard</button>
+      <button id="tabAudit" onclick="setAdminTab('audit')">Response Audit</button>
+    </div>
+    <div class="filter-bar" id="adminFilters" style="display:none">
+      <input id="fSearch" placeholder="Search name…">
+      <select id="fDept"><option value="">All departments</option></select>
+      <select id="fStatus">
+        <option value="">All statuses</option>
+        <option value="done">Fully completed</option>
+        <option value="partial">Partially filled</option>
+        <option value="none">Not filled</option>
+      </select>
+      <div class="seg">
+        <button id="segLeaders" class="on" onclick="setScope('leaders')">Leaders only</button>
+        <button id="segAll" onclick="setScope('all')">Everyone</button>
+      </div>
+      <span class="result-count" id="fCount"></span>
+    </div>
+    <div id="adminBody"><div class="loading">Loading…</div></div>
+    <div id="adminDetail"></div>
+    <div id="auditPanel" class="hidden">
+      <div class="filter-bar">
+        <div class="seg">
+          <button id="segByRecv" class="on" onclick="setAuditMode('receiver')">By Receiver</button>
+          <button id="segByGiver" onclick="setAuditMode('giver')">By Giver</button>
+        </div>
+        <input id="auditWho" list="auditNames" placeholder="Type a name…" style="min-width:260px">
+        <datalist id="auditNames"></datalist>
+        <span class="result-count" id="auditCount"></span>
+      </div>
+      <div id="auditBody"><div class="loading">Select a person to see their reviews.</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const API_URL = 'https://script.google.com/macros/s/AKfycby9lBxwPbcGYeh3Gl9ztPTGksKmfOFtWFgZgmUItxbwobByUEKKVMvkYJO-FCk2iI3i4w/exec'; // ends with /exec
+/* ========================================== */
+
+const FORMS = {
+  VENDOR: {
+    title: 'Vendor / Cross-Department Feedback',
+    badge: 'b-vendor', anchors: ['Not at all likely','Extremely likely'],
+    note: 'Cross-department leaders you work with — rate them.',
+    questions: [
+      ['Does he/she personally demonstrate / show by priority?','तो/ती वैयक्तिकरित्या प्रात्यक्षिक/प्राधान्याने दाखवतो का?'],
+      ['Is he/she a co-operative & supportive member at work?','तो/ती कामावर सहकारी आणि सहाय्यक सदस्य आहे का?'],
+      ['Do his/her habits & actions inspire you?','त्याच्या/तिच्या सवयी आणि कृती तुम्हाला प्रेरणा देतात का?']
+    ],
+    commentLabel: ['Overall, is he/she a valuable team member? If yes, please share your views.','एकूणच तो/ती एक महत्त्वपूर्ण मौल्यवान संघ सदस्य आहे का? होय असल्यास, कृपया आपले मत सामायिक करा.']
+  },
+  PEER: {
+    title: 'Peer Feedback',
+    badge: 'b-peer', anchors: ['Not at all likely','Extremely likely'],
+    note: 'Peer leaders — rate them.',
+    questions: [
+      ['How is the comfort level of communication in a crucial or critical situation?','निर्णायक किंवा गंभीर परिस्थितीत एकमेकांशी किती मोकळेपणाने संवाद साधू शकता?'],
+      ['Does he/she respect you, your work & department and behave accordingly?','तो/ती तुमचा, तुमच्या कामाचा आणि तुमच्या विभागाचा आदर करतात का आणि त्यानुसार वागतात का?'],
+      ['Does he/she give genuine feedback about your work?','तो/ती तुमच्या कामाबद्दल खरा फीडबॅक देतात का?'],
+      ['Do his/her actions and habits inspire you?','त्यांचं/तिचं वागणं आणि सवयी तुम्हाला प्रेरित करतात का?'],
+      ['Do you think his/her skills, ideas, and knowledge are useful for you and the organization?','त्याची/तिची कौशल्ये, कल्पना आणि ज्ञान तुमच्यासाठी आणि संस्थेसाठी उपयुक्त आहेत असे तुम्हाला वाटते का?']
+    ],
+    commentLabel: ['Overall, is he/she a valuable team member? If yes, please share your views.','एकूणच तो/ती एक उपयुक्त संघ सदस्य आहे का? होय असल्यास, कृपया आपले मत मांडा.']
+  },
+  TEAM: {
+    title: 'Team Feedback (for Reporting Manager)',
+    badge: 'b-team', anchors: ['Not at all likely','Extremely likely'],
+    note: 'Your reporting manager / leader — rate them as your manager.',
+    questions: [
+      ['Does he/she clearly communicate expectations about work?','तो/ती तुम्हाला तुमच्याकडून असलेल्या कामाबद्दलच्या अपेक्षा स्पष्टपणे समजावून सांगतात का?'],
+      ['Does he/she give you feedback regularly about your work?','तो/ती तुम्हाला तुमच्या कामाबद्दल नियमितपणे फीडबॅक देतात का?'],
+      ['Is he/she a good listener who encourages you to share your ideas and concerns?','ते तुमचं म्हणणं योग्यप्रकारे ऐकून घेतात का जेणेकरून तुम्ही तुमच्या नवनवीन कल्पना किंवा अडचणी त्यांच्यासमोर मांडू शकता?'],
+      ['Does he/she show appreciation toward your work whenever due?','तुम्ही केलेल्या चांगल्या कामाची वेळोवेळी दखल घेण्यात येते का?'],
+      ['Is he/she genuinely interested in your growth and invests time and effort in developing you personally and professionally?','त्यांना माझ्या प्रगतीमध्ये खरोखर रस आहे का, मला वैयक्तिक आणि व्यावसायिकरित्या विकसित करण्यासाठी वेळ देतात का आणि त्यासाठी प्रयत्न करतात का?']
+    ],
+    commentLabel: ['Please add if you have further comments.','तुमच्या आणखी टिप्पण्या असल्यास कृपया जोडा.']
+  },
+  MANAGER: {
+    title: 'Reporting Manager Feedback (for Team Member)',
+    badge: 'b-manager', anchors: ['Not at all likely','Extremely likely'],
+    note: 'Your team members — assess each one as their reporting manager.',
+    questions: [
+      ['Is the team member ready for the next challenge?','टीम मेंबर पुढील आव्हानासाठी तयार आहेत का?', ['No','Yes']],
+      ['Rate the candidate on commitment level.','उमेदवाराला वचनबद्धतेच्या पातळीवर रेट करा.'],
+      ['Rate the candidate on the relationship level.','उमेदवाराला नातेसंबंधाच्या पातळीवर रेट करा.'],
+      ['Rate the candidate on discipline level.','उमेदवाराला शिस्तीच्या पातळीवर रेट करा.'],
+      ['Rate the candidate on ease of working.','कामाच्या सुलभतेवर उमेदवाराला रेट करा.'],
+      ['Rate the candidate on versatility level.','उमेदवाराला अष्टपैलुत्व स्तरावर रेट करा.'],
+      ['Rate the candidate on quality level of the work.','उमेदवाराला कामाच्या गुणवत्तेनुसार रेट करा.']
+    ],
+    tenure: {
+      label: ['How long do you see he/she will be associated with the organization?','तो/ती संस्थेशी किती काळ संबंधित असेल असे तुम्हाला वाटते?'],
+      options: ['0-6 months','1-2 years','3-5 years','More than 5 years']
+    },
+    commentLabel: ['Please add if you have further comments.','तुमच्या आणखी टिप्पण्या असल्यास कृपया जोडा.']
+  }
 };
+const FORM_ORDER = ['MANAGER','TEAM','PEER','VENDOR'];
+const FORM_SHORT = {VENDOR:'Cross-Dept',PEER:'Peer',TEAM:'Team ↑ (upward)',MANAGER:'Manager ↓ (downward)'};
 
-function doGet(e) {
-  var p = (e && e.parameter) || {};
-  var out;
+let state = { me: null, email: null, assignments: [], adminData: null,
+  af: { q:'', dept:'', status:'', scope:'leaders' },
+  adminTab: 'score', audit: null, auditMode: 'receiver', auditWho: '' };
+
+/* ---------- JSONP ---------- */
+let jsonpN = 0;
+function api(params) {
+  return new Promise((resolve, reject) => {
+    const cb = '__cb' + (++jsonpN) + '_' + Date.now();
+    const s = document.createElement('script');
+    const q = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    window[cb] = (data) => { delete window[cb]; s.remove(); resolve(data); };
+    s.onerror = () => { delete window[cb]; s.remove(); reject(new Error('Network error')); };
+    s.src = API_URL + '?' + q + '&callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+/* ---------- login ---------- */
+async function doLogin() {
+  const email = document.getElementById('emailInput').value.trim().toLowerCase();
+  const err = document.getElementById('loginErr');
+  if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email ID.'; return; }
+  err.textContent = '';
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Checking…';
   try {
-    switch (p.action) {
-      case 'login':     out = apiLogin(p.email || ''); break;
-      case 'submit':    out = apiSubmit(p.payload || ''); break;
-      case 'dashboard': out = apiDashboard(p.pin || ''); break;
-      case 'audit':     out = apiAudit(p.pin || ''); break;
-      default:          out = { ok: false, error: 'Unknown action' };
-    }
-  } catch (err) {
-    out = { ok: false, error: String(err) };
-  }
-  var json = JSON.stringify(out);
-  if (p.callback) {
-    return ContentService.createTextOutput(p.callback + '(' + json + ')')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
-}
-
-/* ---------- helpers ---------- */
-
-function normKey(s) {
-  return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase();
-}
-
-function getAssignmentsData() {
-  var sh = SS().getSheetByName('Assignments');
-  if (!sh) throw new Error('Assignments tab missing');
-  var vals = sh.getDataRange().getValues();
-  var rows = [];
-  for (var i = 1; i < vals.length; i++) {
-    var r = vals[i];
-    if (!r[0]) continue;
-    rows.push({
-      row: i + 1,
-      giver: String(r[0]).trim(),
-      rkey: String(r[1]).trim(),
-      receiver: String(r[2]).trim(),
-      dept: String(r[3]).trim(),
-      form: String(r[4]).trim().toUpperCase(),
-      status: String(r[5] || 'PENDING').trim().toUpperCase()
-    });
-  }
-  return { sheet: sh, rows: rows };
-}
-
-function getGiversMaster() {
-  var sh = SS().getSheetByName('Givers');
-  if (!sh) throw new Error('Givers tab missing');
-  var vals = sh.getDataRange().getValues();
-  var byEmail = {};
-  for (var i = 1; i < vals.length; i++) {
-    var r = vals[i];
-    if (!r[0]) continue;
-    var email = String(r[2] || '').trim().toLowerCase();
-    if (!email || email.indexOf('@') === -1) continue;
-    byEmail[email] = {
-      name: String(r[0]).trim(),
-      empId: String(r[1] || '').trim(),
-      email: email,
-      dept: String(r[3] || '').trim()
-    };
-  }
-  return byEmail;
-}
-
-function resolveEmail(email) {
-  var e = String(email || '').trim().toLowerCase();
-  if (!e) return null;
-  return getGiversMaster()[e] || null;
-}
-
-function getAdminPin() {
-  var sh = SS().getSheetByName('Config');
-  if (sh) {
-    var v = String(sh.getRange('B1').getValue() || '').trim();
-    if (v) return v;
-  }
-  return '2026';
-}
-
-/* ---------- endpoints ---------- */
-
-function apiLogin(email) {
-  var g = resolveEmail(email);
-  if (!g) return { ok: false, error: 'Email not found. Please use your registered email ID or contact HR.' };
-  var rows = getAssignmentsData().rows.filter(function (a) { return normKey(a.giver) === normKey(g.name); });
-  return {
-    ok: true,
-    giver: { name: g.name, empId: g.empId, dept: g.dept, email: g.email },
-    assignments: rows.map(function (a) {
-      return { rkey: a.rkey, receiver: a.receiver, dept: a.dept, form: a.form, status: a.status };
-    })
-  };
-}
-
-/**
- * payload JSON: { email, rkey, form, ratings:[..], tenure?, comments? }
- */
-function apiSubmit(payloadStr) {
-  var p;
-  try { p = JSON.parse(payloadStr); } catch (e) { return { ok: false, error: 'Bad payload' }; }
-  if (!p.email || !p.rkey || !p.form || !Array.isArray(p.ratings)) {
-    return { ok: false, error: 'Missing fields' };
-  }
-  var g = resolveEmail(p.email);
-  if (!g) return { ok: false, error: 'Email not recognized' };
-
-  var form = String(p.form).toUpperCase();
-  var qList = FORM_QUESTIONS[form];
-  if (!qList) return { ok: false, error: 'Unknown form type' };
-  if (p.ratings.length !== qList.length) return { ok: false, error: 'Expected ' + qList.length + ' ratings' };
-  for (var i = 0; i < p.ratings.length; i++) {
-    var v = Number(p.ratings[i]);
-    if (!(v >= 1 && v <= 10)) return { ok: false, error: 'Ratings must be 1–10' };
-  }
-
-  if (form === 'MANAGER' && !p.tenure) return { ok: false, error: 'Tenure selection required' };
-
-  var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    var data = getAssignmentsData();
-    var match = null;
-    for (var j = 0; j < data.rows.length; j++) {
-      var a = data.rows[j];
-      if (normKey(a.giver) === normKey(g.name) && a.rkey === String(p.rkey).trim() && a.form === form) {
-        match = a; break;
-      }
-    }
-    if (!match) return { ok: false, error: 'Assignment not found' };
-    if (match.status === 'DONE') return { ok: false, error: 'Already submitted' };
-
-    var ss = SS();
-    var resp = ss.getSheetByName('Responses');
-    if (!resp) {
-      resp = ss.insertSheet('Responses');
-      resp.appendRow(['Timestamp', 'Giver', 'Receiver Key', 'Receiver', 'Receiver Department', 'Form',
-        'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Avg', 'Tenure', 'Comments']);
-      resp.setFrozenRows(1);
-    }
-    var ratings = p.ratings.map(Number);
-    var padded = ratings.concat([,,,,,,,]).slice(0, 7);
-    var avg = ratings.reduce(function (s, x) { return s + x; }, 0) / ratings.length;
-    resp.appendRow([new Date(), g.name, match.rkey, match.receiver, match.dept, form,
-      padded[0]||'', padded[1]||'', padded[2]||'', padded[3]||'', padded[4]||'', padded[5]||'', padded[6]||'',
-      Math.round(avg * 100) / 100,
-      p.tenure || '',
-      String(p.comments || '').slice(0, 2000)]);
-
-    data.sheet.getRange(match.row, 6).setValue('DONE');
-    data.sheet.getRange(match.row, 7).setValue(new Date());
-    return { ok: true };
+    const r = await api({action:'login', email});
+    if (!r.ok) throw new Error(r.error);
+    state.me = r.giver.name;
+    state.email = email;
+    state.assignments = r.assignments;
+    try { localStorage.setItem('lr_email', email); } catch(e){}
+    show('viewMine');
+    document.getElementById('mineName').textContent = r.giver.name;
+    renderMine();
+  } catch(e) {
+    err.textContent = e.message;
   } finally {
-    lock.releaseLock();
+    btn.disabled = false; btn.textContent = 'Continue →';
+  }
+}
+document.getElementById('btnLogin').onclick = doLogin;
+document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+// prefill remembered email
+try { const saved = localStorage.getItem('lr_email'); if (saved) document.getElementById('emailInput').value = saved; } catch(e){}
+
+function renderMine() {
+  const a = state.assignments;
+  const done = a.filter(x => x.status==='DONE').length;
+  document.getElementById('mineProgressLabel').textContent = done + ' of ' + a.length + ' completed';
+  document.getElementById('mineProgressFill').style.width = (a.length ? done/a.length*100 : 0) + '%';
+  let html = '';
+  FORM_ORDER.forEach(f => {
+    const items = a.filter(x => x.form===f);
+    if (!items.length) return;
+    const F = FORMS[f];
+    html += `<div class="section-title"><span class="serif">${F.title}</span><span class="badge ${F.badge}">${items.filter(i=>i.status==='DONE').length}/${items.length}</span></div>
+      <div class="section-note">${F.note}</div><div class="grid">`;
+    items.forEach(it => {
+      html += `<div class="rcard"><div><div class="nm">${it.receiver}</div><div class="dp">${it.dept}</div></div>`;
+      html += it.status==='DONE'
+        ? `<span class="chip-done">✓ Submitted</span>`
+        : `<button class="btn btn-red" onclick="openForm('${it.rkey}','${it.form}')">Review</button>`;
+      html += `</div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('mineSections').innerHTML = html || '<div class="loading">No reviews assigned.</div>';
+}
+
+/* ---------- form modal ---------- */
+let cur = null;
+function openForm(rkey, form) {
+  const it = state.assignments.find(x => x.rkey===rkey && x.form===form);
+  if (!it) return;
+  cur = { it, ratings: {}, tenure: null };
+  const F = FORMS[form];
+  let html = `<div class="overlay" id="ov"><div class="modal">
+    <h3>${F.title}</h3>
+    <div class="reviewing">Reviewing: <b>${it.receiver}</b> · ${it.dept}</div>`;
+  F.questions.forEach((q, i) => {
+    const anchors = q[2] || F.anchors;
+    html += `<div class="q"><div class="qe">${q[0]}</div><div class="qm">${q[1]}</div>
+      <div class="scale" id="sc${i}">`;
+    for (let v=1; v<=10; v++) html += `<button onclick="pick(${i},${v},this)">${v}</button>`;
+    html += `</div><div class="anchors"><span>${anchors[0]}</span><span>${anchors[1]}</span></div></div>`;
+  });
+  if (F.tenure) {
+    html += `<div class="q"><div class="qe">${F.tenure.label[0]}</div><div class="qm">${F.tenure.label[1]}</div><div class="pills" id="tenurePills">`;
+    F.tenure.options.forEach(o => html += `<button onclick="pickTenure('${o}',this)">${o}</button>`);
+    html += `</div></div>`;
+  }
+  html += `<div class="q"><div class="qe">${F.commentLabel[0]}</div><div class="qm">${F.commentLabel[1]}</div>
+    <textarea id="cmt" placeholder="Type your comments…"></textarea></div>
+    <div class="modal-actions"><span class="err" id="ferr"></span>
+    <button class="btn btn-lite" onclick="closeForm()">Cancel</button>
+    <button class="btn btn-dark" id="btnSave" onclick="saveForm()">Save review</button></div>
+  </div></div>`;
+  document.getElementById('modalRoot').innerHTML = html;
+}
+function pick(qi, v, btn) {
+  cur.ratings[qi] = v;
+  [...btn.parentElement.children].forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function pickTenure(o, btn) {
+  cur.tenure = o;
+  [...btn.parentElement.children].forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function closeForm(){ document.getElementById('modalRoot').innerHTML=''; cur=null; }
+
+async function saveForm() {
+  const F = FORMS[cur.it.form];
+  const err = document.getElementById('ferr');
+  const ratings = F.questions.map((_,i) => cur.ratings[i]);
+  if (ratings.some(v => !v)) { err.textContent = 'Please answer all rating questions.'; return; }
+  if (F.tenure && !cur.tenure) { err.textContent = 'Please select the tenure question.'; return; }
+  err.textContent = '';
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = JSON.stringify({
+    email: state.email, rkey: cur.it.rkey, form: cur.it.form,
+    ratings, tenure: cur.tenure || '', comments: document.getElementById('cmt').value.trim()
+  });
+  try {
+    const r = await api({action:'submit', payload});
+    if (!r.ok) throw new Error(r.error);
+    cur.it.status = 'DONE';
+    closeForm();
+    renderMine();
+  } catch(e) {
+    err.textContent = e.message; btn.disabled = false; btn.textContent = 'Save review';
   }
 }
 
-/** Full drill-down: every assignment + every individual response (admin only) */
-function apiAudit(pin) {
-  if (String(pin) !== getAdminPin()) return { ok: false, error: 'Invalid PIN' };
-  var assign = getAssignmentsData().rows.map(function (a) {
-    return { giver: a.giver, rkey: a.rkey, receiver: a.receiver, dept: a.dept, form: a.form, status: a.status };
-  });
-  var responses = [];
-  var sh = SS().getSheetByName('Responses');
-  if (sh && sh.getLastRow() > 1) {
-    var vals = sh.getRange(2, 1, sh.getLastRow() - 1, 16).getValues();
-    vals.forEach(function (r) {
-      var ratings = [];
-      for (var q = 0; q < 7; q++) {
-        var v = Number(r[6 + q]);
-        if (v >= 1) ratings.push(v);
-      }
-      responses.push({
-        ts: r[0] ? Utilities.formatDate(new Date(r[0]), Session.getScriptTimeZone(), 'dd MMM HH:mm') : '',
-        giver: String(r[1]),
-        rkey: String(r[2]).trim(),
-        receiver: String(r[3]),
-        form: String(r[5]).trim().toUpperCase(),
-        ratings: ratings,
-        avg: Number(r[13]) || null,
-        tenure: String(r[14] || ''),
-        comments: String(r[15] || '')
-      });
-    });
+/* ---------- admin ---------- */
+document.getElementById('btnAdmin').onclick = async () => {
+  const pin = prompt('Admin PIN:');
+  if (!pin) return;
+  show('viewAdmin');
+  document.getElementById('adminBody').innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('adminDetail').innerHTML = '';
+  const r = await api({action:'dashboard', pin});
+  if (!r.ok) { document.getElementById('adminBody').innerHTML = '<div class="loading">'+r.error+'</div>'; return; }
+  state.adminData = r.receivers; state.adminPin = pin;
+  document.getElementById('adminTabs').style.display = 'flex';
+  initAdminFilters();
+  renderAdmin();
+};
+document.getElementById('btnRefresh').onclick = async () => {
+  const r = await api({action:'dashboard', pin: state.adminPin});
+  if (r.ok) {
+    state.adminData = r.receivers; initAdminFilters();
+    state.audit = null;
+    if (state.adminTab === 'audit') loadAudit(); else renderAdmin();
   }
-  return { ok: true, assignments: assign, responses: responses };
+};
+function sp(v){ if(v==null) return '<span class="score-pill s-na">—</span>';
+  const c = v>=8?'s-hi':v>=6?'s-mid':'s-lo';
+  return `<span class="score-pill ${c}">${v.toFixed(1)}</span>`; }
+function compl(c){ const t=c.VENDOR.t+c.PEER.t+c.TEAM.t+c.MANAGER.t, d=c.VENDOR.d+c.PEER.d+c.TEAM.d+c.MANAGER.d;
+  return `<b>${t?Math.round(d/t*100):0}%</b> <span class="mini">${d}/${t}</span>`; }
+
+function setAdminTab(t) {
+  state.adminTab = t;
+  document.getElementById('tabScore').classList.toggle('on', t==='score');
+  document.getElementById('tabAudit').classList.toggle('on', t==='audit');
+  document.getElementById('adminFilters').style.display = t==='score' ? 'flex' : 'none';
+  document.getElementById('adminBody').classList.toggle('hidden', t!=='score');
+  document.getElementById('adminDetail').classList.toggle('hidden', t!=='score');
+  document.getElementById('auditPanel').classList.toggle('hidden', t!=='audit');
+  if (t==='audit' && !state.audit) loadAudit();
+}
+async function loadAudit() {
+  document.getElementById('auditBody').innerHTML = '<div class="loading">Loading responses…</div>';
+  const r = await api({action:'audit', pin: state.adminPin});
+  if (!r.ok) { document.getElementById('auditBody').innerHTML = '<div class="loading">'+r.error+'</div>'; return; }
+  // index responses by giver|rkey|form
+  r.respMap = {};
+  r.responses.forEach(x => r.respMap[(x.giver+'|'+x.rkey+'|'+x.form).toLowerCase()] = x);
+  state.audit = r;
+  fillAuditNames();
+  document.getElementById('auditBody').innerHTML = '<div class="loading">Select a person to see their reviews.</div>';
+  if (state.auditWho) renderAudit();
+}
+function setAuditMode(m) {
+  state.auditMode = m; state.auditWho = '';
+  document.getElementById('segByRecv').classList.toggle('on', m==='receiver');
+  document.getElementById('segByGiver').classList.toggle('on', m==='giver');
+  document.getElementById('auditWho').value = '';
+  document.getElementById('auditCount').textContent = '';
+  fillAuditNames();
+  document.getElementById('auditBody').innerHTML = '<div class="loading">Select a person to see their reviews.</div>';
+}
+function fillAuditNames() {
+  if (!state.audit) return;
+  const key = state.auditMode === 'receiver' ? 'receiver' : 'giver';
+  const names = [...new Set(state.audit.assignments.map(a => a[key]))].sort();
+  document.getElementById('auditNames').innerHTML = names.map(n => `<option>${n}</option>`).join('');
+}
+function renderAudit() {
+  const A = state.audit; if (!A) return;
+  const who = state.auditWho.trim().toLowerCase(); if (!who) return;
+  const key = state.auditMode === 'receiver' ? 'receiver' : 'giver';
+  const other = state.auditMode === 'receiver' ? 'giver' : 'receiver';
+  const rows = A.assignments.filter(a => a[key].toLowerCase() === who);
+  if (!rows.length) { document.getElementById('auditBody').innerHTML = '<div class="loading">No assignments found for this name.</div>'; return; }
+  const done = rows.filter(a => a.status === 'DONE').length;
+  document.getElementById('auditCount').textContent = done + ' of ' + rows.length + ' filled';
+  const order = {MANAGER:0, TEAM:1, PEER:2, VENDOR:3};
+  rows.sort((a,b) => (a.status===b.status ? (order[a.form]-order[b.form] || a[other].localeCompare(b[other])) : (a.status==='DONE'? -1: 1)));
+  let html = `<div class="table-frame"><table class="admin-table"><tr>
+    <th>${state.auditMode==='receiver' ? 'Rated by (Giver)' : 'Rated (Receiver)'}</th>
+    <th>Form</th><th>Status</th><th>Ratings (Q1→)</th><th>Avg</th><th>Tenure</th><th>Comment</th><th>When</th></tr>`;
+  rows.forEach(a => {
+    const rsp = A.respMap[(a.giver+'|'+a.rkey+'|'+a.form).toLowerCase()];
+    const F = FORMS[a.form];
+    html += `<tr><td><b>${a[other]}</b></td>
+      <td><span class="badge ${F?F.badge:''}">${FORM_SHORT[a.form]||a.form}</span></td>
+      <td>${a.status==='DONE' ? '<span class="chip-done">✓ Filled</span>' : '<span class="chip-pending">Pending</span>'}</td>
+      <td class="ratings-str">${rsp ? rsp.ratings.join(' · ') : '—'}</td>
+      <td>${rsp && rsp.avg!=null ? sp(rsp.avg) : '<span class="score-pill s-na">—</span>'}</td>
+      <td class="mini">${rsp && rsp.tenure ? rsp.tenure : '—'}</td>
+      <td class="cmt-cell">${rsp && rsp.comments ? rsp.comments : '—'}</td>
+      <td class="mini">${rsp ? rsp.ts : ''}</td></tr>`;
+  });
+  html += '</table></div>';
+  document.getElementById('auditBody').innerHTML = html;
+}
+function isLeader(L) {
+  // team members receive ONLY Manager ↓ reviews; leaders receive vendor/peer/upward
+  const c = L.completion;
+  return (c.VENDOR.t + c.PEER.t + c.TEAM.t) > 0;
+}
+function statusOf(L) {
+  const c = L.completion;
+  const t = c.VENDOR.t + c.PEER.t + c.TEAM.t + c.MANAGER.t;
+  const d = c.VENDOR.d + c.PEER.d + c.TEAM.d + c.MANAGER.d;
+  if (t > 0 && d >= t) return 'done';
+  if (d > 0) return 'partial';
+  return 'none';
+}
+function setScope(s) {
+  state.af.scope = s;
+  document.getElementById('segLeaders').classList.toggle('on', s==='leaders');
+  document.getElementById('segAll').classList.toggle('on', s==='all');
+  renderAdmin();
+}
+function initAdminFilters() {
+  const bar = document.getElementById('adminFilters');
+  bar.style.display = 'flex';
+  const depts = [...new Set(state.adminData.map(L => L.dept).filter(Boolean))].sort();
+  const sel = document.getElementById('fDept');
+  sel.innerHTML = '<option value="">All departments</option>' + depts.map(d => `<option>${d}</option>`).join('');
+  sel.value = state.af.dept && depts.includes(state.af.dept) ? state.af.dept : '';
+  document.getElementById('fSearch').value = state.af.q;
+  document.getElementById('fStatus').value = state.af.status;
+  document.getElementById('fSearch').oninput = e => { state.af.q = e.target.value; renderAdmin(); };
+  sel.onchange = e => { state.af.dept = e.target.value; renderAdmin(); };
+  document.getElementById('fStatus').onchange = e => { state.af.status = e.target.value; renderAdmin(); };
+  const aw = document.getElementById('auditWho');
+  aw.oninput = e => { state.auditWho = e.target.value; renderAudit(); };
+}
+function renderAdmin() {
+  const f = state.af, q = f.q.trim().toLowerCase();
+  const list = state.adminData.filter(L =>
+    (f.scope === 'all' || isLeader(L)) &&
+    (!q || L.name.toLowerCase().includes(q)) &&
+    (!f.dept || L.dept === f.dept) &&
+    (!f.status || statusOf(L) === f.status)
+  );
+  document.getElementById('fCount').textContent = list.length + ' of ' + state.adminData.length;
+  document.getElementById('adminDetail').innerHTML = '';
+  if (!list.length) {
+    document.getElementById('adminBody').innerHTML = '<div class="loading">No one matches these filters.</div>';
+    return;
+  }
+  let html = `<div class="table-frame"><table class="admin-table"><tr><th>#</th><th>Name</th><th>Department</th>
+    <th>Overall</th><th>Cross-Dept</th><th>Peer</th><th>Team ↑</th><th>Manager ↓</th><th>Completion</th></tr>`;
+  list.forEach((L,i) => {
+    const fa = L.formAvgs;
+    html += `<tr onclick="adminDetail('${L.key}')"><td>${i+1}</td><td><b>${L.name}</b></td><td class="mini">${L.dept}</td>
+      <td>${sp(L.overall)}</td>
+      <td>${sp(fa.VENDOR&&fa.VENDOR.avg)}</td><td>${sp(fa.PEER&&fa.PEER.avg)}</td>
+      <td>${sp(fa.TEAM&&fa.TEAM.avg)}</td><td>${sp(fa.MANAGER&&fa.MANAGER.avg)}</td>
+      <td>${compl(L.completion)}</td></tr>`;
+  });
+  html += '</table></div>';
+  document.getElementById('adminBody').innerHTML = html;
+}
+function adminDetail(id) {
+  const L = state.adminData.find(x => x.key===id);
+  let html = `<div class="detail-card"><h3 class="serif" style="color:var(--espresso)">${L.name} <span class="mini">· ${L.dept} · ${L.responses} responses</span></h3>`;
+  FORM_ORDER.forEach(f => {
+    const S = L.formAvgs[f]; if (!S) return;
+    const F = FORMS[f];
+    html += `<div style="margin-top:16px"><span class="badge ${F.badge}">${F.title}</span> <span class="mini">avg ${S.avg} · n=${S.n}</span>`;
+    F.questions.forEach((q,i) => { if (S.q[i]) html += `<div class="qrow"><span>${q[0]}</span><b>${S.q[i].toFixed(1)}</b></div>`; });
+    if (S.tenure && Object.keys(S.tenure).length)
+      html += `<div class="qrow"><span>Expected tenure</span><b>${Object.entries(S.tenure).map(([k,v])=>k+' ×'+v).join(', ')}</b></div>`;
+    html += '</div>';
+  });
+  if (L.comments.length) {
+    html += `<div style="margin-top:18px"><b class="serif" style="color:var(--espresso)">Comments</b>`;
+    L.comments.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}</div>${c.text}</div>`);
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('adminDetail').innerHTML = html;
+  document.getElementById('adminDetail').scrollIntoView({behavior:'smooth'});
 }
 
-function apiDashboard(pin) {
-  if (String(pin) !== getAdminPin()) return { ok: false, error: 'Invalid PIN' };
-  var ss = SS();
-  var assign = getAssignmentsData().rows;
-
-  var recv = {}; // by receiver key
-  assign.forEach(function (a) {
-    if (!recv[a.rkey]) recv[a.rkey] = {
-      key: a.rkey, name: a.receiver, dept: a.dept,
-      forms: { VENDOR: {t:0,d:0}, PEER: {t:0,d:0}, TEAM: {t:0,d:0}, MANAGER: {t:0,d:0} }
-    };
-    var f = recv[a.rkey].forms[a.form];
-    if (f) { f.t++; if (a.status === 'DONE') f.d++; }
-  });
-
-  var sh = ss.getSheetByName('Responses');
-  var comments = {};
-  if (sh && sh.getLastRow() > 1) {
-    var vals = sh.getRange(2, 1, sh.getLastRow() - 1, 16).getValues();
-    vals.forEach(function (r) {
-      var key = String(r[2]).trim(), form = String(r[5]).trim().toUpperCase();
-      var R = recv[key]; if (!R) return;
-      if (!R.scores) R.scores = {};
-      if (!R.scores[form]) R.scores[form] = { n: 0, qsum: [0,0,0,0,0,0,0], sum: 0, tenure: {} };
-      var S = R.scores[form];
-      S.n++;
-      var cnt = 0, tot = 0;
-      for (var q = 0; q < 7; q++) {
-        var v = Number(r[6 + q]);
-        if (v >= 1) { S.qsum[q] += v; cnt++; tot += v; }
-      }
-      S.sum += cnt ? tot / cnt : 0;
-      if (r[14]) S.tenure[r[14]] = (S.tenure[r[14]] || 0) + 1;
-      if (r[15]) {
-        if (!comments[key]) comments[key] = [];
-        comments[key].push({ form: form, giver: String(r[1]), text: String(r[15]) });
-      }
-    });
-  }
-
-  var out = Object.keys(recv).map(function (key) {
-    var R = recv[key];
-    var formAvgs = {}, wSum = 0, wN = 0;
-    ['VENDOR','PEER','TEAM','MANAGER'].forEach(function (f) {
-      var S = R.scores && R.scores[f];
-      if (S && S.n) {
-        var avg = S.sum / S.n;
-        formAvgs[f] = { avg: Math.round(avg * 100) / 100, n: S.n,
-          q: S.qsum.map(function (x) { return S.n ? Math.round(x / S.n * 100) / 100 : 0; }),
-          tenure: S.tenure };
-        wSum += avg * S.n; wN += S.n;
-      }
-    });
-    return {
-      key: key, name: R.name, dept: R.dept,
-      completion: R.forms,
-      formAvgs: formAvgs,
-      overall: wN ? Math.round(wSum / wN * 100) / 100 : null,
-      responses: wN,
-      comments: comments[key] || []
-    };
-  });
-  out.sort(function (a, b) { return (b.overall || 0) - (a.overall || 0); });
-  return { ok: true, receivers: out };
+/* ---------- nav ---------- */
+function show(id) {
+  ['viewLogin','viewMine','viewAdmin'].forEach(v => document.getElementById(v).classList.toggle('hidden', v!==id));
+  document.getElementById('btnLogout').classList.toggle('hidden', id==='viewLogin');
 }
+document.getElementById('btnLogout').onclick = () => {
+  state.me = null; state.email = null; state.assignments = [];
+  document.getElementById('loginErr').textContent = '';
+  show('viewLogin');
+};
+</script>
+</body>
+</html>
