@@ -94,6 +94,19 @@ textarea:focus{border-color:var(--gold)}
 .seg button{border:none;background:#fff;padding:10px 14px;font-family:'Mulish';font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
 .seg button.on{background:var(--espresso);color:#fff}
 .result-count{font-size:12px;color:var(--muted);font-weight:700;margin-left:auto}
+.intel-btn-row{margin-top:16px}
+.intel-card{background:linear-gradient(135deg,#FDFBF8,#F7F0E8);border:1.5px solid var(--gold);border-radius:14px;padding:20px 22px;margin-top:14px}
+.intel-card h4{font-family:'Playfair Display',serif;color:var(--espresso);font-size:17px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.intel-conf{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:12px}
+.conf-high{background:#E4F3E5;color:#2E7D32}.conf-medium{background:#FBF0DC;color:#B26A00}.conf-low{background:#FCE4E1;color:#C0392B}
+.intel-summary{font-size:14px;color:#4A3C33;line-height:1.55;margin-bottom:14px}
+.intel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.intel-col{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.intel-col .t{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.t-str{color:#2E7D32}.t-wk{color:#C0392B}.t-imp{color:#B26A00}
+.intel-col ul{margin:0;padding-left:16px}
+.intel-col li{font-size:13px;color:#4A3C33;line-height:1.45;margin-bottom:7px}
+.intel-gap{margin-top:12px;font-size:13px;color:#5C4F47;background:#fff;border-left:3px solid var(--red);border-radius:0 9px 9px 0;padding:10px 13px}
 .admin-tabs{display:flex;gap:8px;margin-bottom:14px}
 .admin-tabs button{border:1.5px solid var(--line);background:#fff;border-radius:22px;padding:9px 20px;font-family:'Mulish';font-weight:800;font-size:13px;cursor:pointer;color:var(--muted)}
 .admin-tabs button.on{background:var(--espresso);color:#fff;border-color:var(--espresso)}
@@ -645,9 +658,66 @@ function adminDetail(id) {
     L.comments.forEach(c => html += `<div class="comment"><div class="who">${FORM_SHORT[c.form]||c.form} · ${c.giver}</div>${c.text}</div>`);
     html += '</div>';
   }
+  html += `<div class="intel-btn-row">
+    <button class="btn btn-red" id="btnIntel" onclick="genIntel('${L.key}')">✦ Generate Intelligence Summary</button>
+  </div><div id="intelBox"></div>`;
   html += '</div>';
   document.getElementById('adminDetail').innerHTML = html;
   document.getElementById('adminDetail').scrollIntoView({behavior:'smooth'});
+}
+
+/* ---------- AI intelligence ---------- */
+const intelCache = {};
+async function genIntel(key) {
+  const L = state.adminData.find(x => x.key === key);
+  if (!L) return;
+  const box = document.getElementById('intelBox');
+  if (intelCache[key]) { box.innerHTML = intelHTML(L, intelCache[key]); return; }
+  const btn = document.getElementById('btnIntel');
+  btn.disabled = true; btn.textContent = 'Analyzing reviews…';
+  // build channel payload: per-question averages with question text
+  const channels = {};
+  FORM_ORDER.forEach(f => {
+    const S = L.formAvgs[f]; if (!S) return;
+    const F = FORMS[f];
+    channels[FORM_SHORT[f] || f] = {
+      responses: S.n, channel_avg: S.avg,
+      questions: F.questions.map((q, i) => ({ q: q[0], avg: S.q[i] })).filter(x => x.avg),
+      tenure_votes: S.tenure && Object.keys(S.tenure).length ? S.tenure : undefined
+    };
+  });
+  const comments = (L.comments || []).map(c => ({ form: FORM_SHORT[c.form] || c.form, text: c.text }));
+  try {
+    const r = await fetch('/api/intelligence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: L.name, dept: L.dept, channels, comments })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Intelligence service error');
+    intelCache[key] = data.intel;
+    box.innerHTML = intelHTML(L, data.intel);
+  } catch (e) {
+    box.innerHTML = `<div class="intel-card"><h4>Intelligence unavailable</h4>
+      <div class="intel-summary">${e.message}. Check that /api/intelligence.js is deployed and ANTHROPIC_API_KEY is set in Vercel.</div></div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '✦ Generate Intelligence Summary';
+  }
+}
+function li(arr){ return (arr||[]).map(x => `<li>${x}</li>`).join('') || '<li>—</li>'; }
+function intelHTML(L, I) {
+  const conf = (I.confidence || 'medium').split(' ')[0].toLowerCase();
+  return `<div class="intel-card">
+    <h4>✦ Leadership Intelligence — ${L.name}
+      <span class="intel-conf conf-${conf}">${conf} confidence</span></h4>
+    <div class="intel-summary">${I.summary || ''}</div>
+    <div class="intel-grid">
+      <div class="intel-col"><div class="t t-str">Strengths</div><ul>${li(I.strengths)}</ul></div>
+      <div class="intel-col"><div class="t t-wk">Weaknesses / Risks</div><ul>${li(I.weaknesses)}</ul></div>
+      <div class="intel-col"><div class="t t-imp">Areas of Improvement</div><ul>${li(I.improvements)}</ul></div>
+    </div>
+    ${I.perception_gap && !/none/i.test(I.perception_gap) ? `<div class="intel-gap"><b>Perception gap:</b> ${I.perception_gap}</div>` : ''}
+  </div>`;
 }
 
 /* ---------- nav ---------- */
